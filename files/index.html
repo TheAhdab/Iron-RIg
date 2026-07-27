@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRON RIG — Your Training Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --bg: #14171a; --bg-raised: #1c2024; --card: #21262b; --line: #2f363d;
+    --chalk: #f2f1ed; --chalk-dim: #9aa1a8; --steel: #5b6b7a;
+    --red: #ff4d3d; --red-dim: #7a2a22; --green: #5fb88a; --amber: #e8b34a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--bg); color:var(--chalk); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  body{padding-bottom:80px;}
+  h1,h2,h3,.display{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.02em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  header{position:sticky; top:0; z-index:20; background:linear-gradient(180deg, var(--bg) 80%, transparent); padding:22px 20px 14px; display:flex; align-items:center; justify-content:space-between;}
+  .brand{display:flex; align-items:baseline; gap:8px;}
+  .brand .mark{color:var(--red); font-weight:700;}
+  .brand h1{font-size:22px; font-weight:700; letter-spacing:0.06em;}
+  .headright{display:flex; align-items:center; gap:10px;}
+  .streak{display:flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--line); padding:7px 12px; border-radius:100px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--amber);}
+  .userchip{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--chalk-dim); cursor:pointer; border-bottom:1px dashed var(--steel);}
+
+  main{max-width:640px; margin:0 auto; padding:0 20px;}
+
+  .login-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .login-card{max-width:380px; width:100%;}
+  .login-card .mark{color:var(--red); font-size:14px; font-family:'JetBrains Mono',monospace;}
+  .login-card h1{font-size:34px; margin:6px 0 10px;}
+  .login-card p{color:var(--chalk-dim); font-size:14px; line-height:1.5; margin-bottom:22px;}
+  .login-input{width:100%; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; color:var(--chalk); font-size:16px; font-family:'Inter',sans-serif; margin-bottom:12px;}
+  .login-input:focus{outline:none; border-color:var(--red);}
+  .btn-primary{width:100%; background:var(--red); color:#1a0a08; border:none; border-radius:12px; padding:14px 16px; font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:0.03em; text-transform:uppercase; font-weight:600; cursor:pointer;}
+  .btn-primary:disabled{opacity:0.5; cursor:default;}
+  .login-note{font-size:12px; color:var(--steel); margin-top:14px; line-height:1.5;}
+  .login-error{color:var(--red); font-size:13px; margin-bottom:10px; display:none;}
+
+  .rail{display:flex; gap:8px; overflow-x:auto; padding:10px 0 20px; scrollbar-width:none;}
+  .rail::-webkit-scrollbar{display:none;}
+  .day-chip{flex:0 0 auto; padding:10px 14px; border-radius:10px; background:var(--card); border:1px solid var(--line); font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.03em; text-transform:uppercase; color:var(--chalk-dim); cursor:pointer; white-space:nowrap; transition:all .15s ease;}
+  .day-chip .sub{display:block; font-size:10px; color:var(--steel); margin-top:2px; font-family:'Inter',sans-serif; text-transform:none; letter-spacing:0;}
+  .day-chip.active{background:var(--red); border-color:var(--red); color:#1a0a08;}
+  .day-chip.active .sub{color:#3a1410;}
+  .day-chip.done{border-color:var(--green);}
+  .day-chip.done::after{content:'✓'; color:var(--green); margin-left:6px;}
+
+  .session-head{margin:6px 0 18px;}
+  .session-head .eyebrow{color:var(--red); font-size:12px; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em;}
+  .session-head h2{font-size:30px; margin:4px 0 6px;}
+  .session-head p{color:var(--chalk-dim); font-size:14px; line-height:1.5;}
+
+  .ex-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 16px 14px; margin-bottom:12px;}
+  .ex-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .ex-name{font-size:16px; font-weight:600;}
+  .ex-target{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--amber); white-space:nowrap;}
+  .ex-note{color:var(--chalk-dim); font-size:13px; margin-top:5px; line-height:1.45;}
+  .sets-row{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .set-box{width:38px; height:38px; border-radius:8px; border:1px solid var(--line); background:var(--bg-raised); color:var(--chalk-dim); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:13px; cursor:pointer; transition:all .12s ease; user-select:none;}
+  .set-box.checked{background:var(--green); border-color:var(--green); color:#0d2418; font-weight:700;}
+
+  .log-row{display:flex; gap:10px; margin-top:12px; align-items:center; flex-wrap:wrap;}
+  .log-field{flex:1; min-width:90px;}
+  .log-field label{display:block; font-size:10px; color:var(--steel); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; font-family:'JetBrains Mono',monospace;}
+  .log-field input{width:100%; background:var(--bg-raised); border:1px solid var(--line); border-radius:8px; padding:9px 10px; color:var(--chalk); font-family:'JetBrains Mono',monospace; font-size:14px;}
+  .log-field input:focus{outline:none; border-color:var(--red);}
+  .last-time{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--chalk-dim); margin-top:8px;}
+  .last-time b{color:var(--amber); font-weight:600;}
+
+  .block-label{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.1em; color:var(--steel); text-transform:uppercase; margin:22px 0 10px;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  .stat .num{font-family:'Oswald',sans-serif; font-size:28px; color:var(--chalk);}
+  .stat .label{font-size:12px; color:var(--chalk-dim); margin-top:2px;}
+
+  .skill{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px;}
+  .skill h3{font-size:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;}
+  .skill h3 span.pct{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--red);}
+  .step{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; color:var(--chalk-dim); cursor:pointer;}
+  .step .box{width:16px; height:16px; border-radius:4px; border:1px solid var(--steel); flex:0 0 16px;}
+  .step.done .box{background:var(--green); border-color:var(--green);}
+  .step.done{color:var(--chalk); text-decoration:line-through; text-decoration-color:var(--line);}
+
+  nav{position:fixed; bottom:0; left:0; right:0; z-index:30; background:var(--bg-raised); border-top:1px solid var(--line); display:flex; justify-content:center; gap:6px; padding:10px 12px calc(10px + env(safe-area-inset-bottom));}
+  .nav-btn{flex:1; max-width:160px; text-align:center; padding:9px 4px; border-radius:10px; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.03em; text-transform:uppercase; color:var(--chalk-dim); cursor:pointer; border:1px solid transparent;}
+  .nav-btn.active{color:var(--red); border-color:var(--red-dim); background:rgba(255,77,61,0.08);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+  .empty{color:var(--steel); font-size:13px; padding:20px 0; text-align:center;}
+  .save-pill{position:fixed; top:14px; right:14px; background:var(--card); border:1px solid var(--line); padding:6px 12px; border-radius:100px; font-size:11px; color:var(--chalk-dim); font-family:'JetBrains Mono',monospace; opacity:0; transition:opacity .3s ease; z-index:40;}
+  .save-pill.show{opacity:1;}
+
+  ::selection{background:var(--red); color:#fff;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<div class="save-pill" id="savePill">Saved to cloud</div>
+
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="mark">/ IRON RIG</div>
+    <h1>Who's training?</h1>
+    <p>Pick a username. No password — enter the same name next time, on any device, and your log picks up right where you left it.</p>
+    <div class="login-error" id="loginError">Letters, numbers, and underscores only, 2-24 characters.</div>
+    <input class="login-input" id="usernameInput" placeholder="e.g. kwame_23" autocomplete="off" maxlength="24">
+    <button class="btn-primary" id="loginBtn" onclick="handleLogin()">Continue</button>
+    <p class="login-note">Your workouts and weights are stored under this username in the cloud. Anyone who knows your exact username and has this app's link could technically look up the same data — don't use anything private as your username, and don't share it publicly.</p>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+  <header>
+    <div class="brand"><span class="mark">/</span><h1>IRON RIG</h1></div>
+    <div class="headright">
+      <div class="userchip" id="userChip" onclick="logout()">user · logout</div>
+      <div class="streak">🔥 <span id="streakNum">0</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-train" class="view active">
+      <div class="rail" id="dayRail"></div>
+      <div class="session-head">
+        <div class="eyebrow" id="sessionEyebrow">DAY 1 / PUSH</div>
+        <h2 id="sessionTitle">Push — Strength</h2>
+        <p id="sessionDesc"></p>
+      </div>
+      <div id="exerciseList"></div>
+      <div id="finisherBlock"></div>
+    </section>
+
+    <section id="view-skills" class="view">
+      <div class="session-head">
+        <div class="eyebrow">PROGRESSIONS</div>
+        <h2>Skill Ladder</h2>
+        <p>Tick off each milestone as you can hold or perform it cleanly for the target.</p>
+      </div>
+      <div id="skillsList"></div>
+    </section>
+
+    <section id="view-progress" class="view">
+      <div class="session-head">
+        <div class="eyebrow">THE NUMBERS</div>
+        <h2>Progress</h2>
+      </div>
+      <div class="grid2">
+        <div class="stat"><div class="num" id="statStreak">0</div><div class="label">Current streak</div></div>
+        <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Sessions logged</div></div>
+        <div class="stat"><div class="num" id="statWeek">0/6</div><div class="label">This week</div></div>
+        <div class="stat"><div class="num" id="statBest">0</div><div class="label">Best streak</div></div>
+      </div>
+      <div class="block-label">History</div>
+      <div id="historyList"></div>
+      <div class="block-label">Reset</div>
+      <div class="ex-card">
+        <p class="ex-note">This clears all logged sessions and skill progress for this username in the cloud. Can't be undone.</p>
+        <div style="margin-top:12px;">
+          <span class="day-chip" style="color:var(--red); border-color:var(--red-dim);" onclick="resetAll()">Clear all data</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <div class="nav-btn active" data-view="train" onclick="showView('train')">Train</div>
+    <div class="nav-btn" data-view="skills" onclick="showView('skills')">Skills</div>
+    <div class="nav-btn" data-view="progress" onclick="showView('progress')">Progress</div>
+  </nav>
+</div>
+
+<script>
+/* ======================================================================
+   SUPABASE SETUP — paste your own project's values here.
+   Get these from your Supabase project: Settings → API
+   ====================================================================== */
+const SUPABASE_URL = 'https://pmwknobatlhuaddkuhee.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtd2tub2JhdGxodWFkZGt1aGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNzkzNDQsImV4cCI6MjEwMDc1NTM0NH0.rvYoMaSygaGpoEKLTnc3UZkHzoDd1ukd1N6N9aGYzTo';
+
+const sb = (SUPABASE_URL.startsWith('http'))
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+/* ============ PROGRAM DATA ============ */
+const PROGRAM = [
+  { id:1, tag:"Day 1 / Push", title:"Push — Strength", sub:"Heavy",
+    desc:"Chest, shoulders, triceps. Low reps, real loads.",
+    exercises:[
+      {name:"Barbell or DB Bench Press", target:"4×6-8", note:"Add weight when you hit 8 clean reps on all 4 sets.", sets:4},
+      {name:"Incline DB Press", target:"3×8-10", note:"30-45° incline. Controlled, no bounce.", sets:3},
+      {name:"Bench Dips (feet elevated)", target:"3×AMRAP", note:"Your dip substitute — feet on a bench or box to load it properly.", sets:3},
+      {name:"Pike Push-ups", target:"3×8-12", note:"Feet elevated. Handstand push-up feeder.", sets:3},
+      {name:"Cable Chest Fly", target:"3×12-15", note:"Slow eccentric, squeeze at the center.", sets:3},
+      {name:"Hollow Body Hold", target:"3×30-40s", note:"Core finisher — lower back stays glued to the floor.", sets:3}
+    ]},
+  { id:2, tag:"Day 2 / Pull", title:"Pull — Strength", sub:"Heavy",
+    desc:"Back and biceps, built around the cable stack since there's no bar.",
+    exercises:[
+      {name:"Wide-Grip Lat Pulldown", target:"4×6-8", note:"Your main pull-up substitute — go heavy.", sets:4},
+      {name:"Seated Cable Row", target:"3×8-10", note:"Chest up, drive elbows back, no torso swing.", sets:3},
+      {name:"Single-Arm Cable Row", target:"3×10 each", note:"Full stretch at the front, squeeze the shoulder blade.", sets:3},
+      {name:"Face Pulls", target:"3×15", note:"Non-negotiable for shoulder health.", sets:3},
+      {name:"Cable or DB Bicep Curl", target:"3×12", note:"Strict, no swinging.", sets:3},
+      {name:"Straight-Arm Pulldown", target:"3×12-15", note:"Lat isolation, arms stay straight throughout.", sets:3}
+    ]},
+  { id:3, tag:"Day 3 / Legs", title:"Legs", sub:"Heavy",
+    desc:"Full lower body — keeps your hips and core stable for skill work.",
+    exercises:[
+      {name:"Barbell Back Squat (or Goblet Squat)", target:"4×6-10", note:"Use whichever your gym setup makes safest.", sets:4},
+      {name:"Bulgarian Split Squat", target:"3×10 each", note:"Rear foot elevated on a bench.", sets:3},
+      {name:"Romanian Deadlift", target:"3×8", note:"Hinge at the hip, slight knee bend.", sets:3},
+      {name:"Leg Curl Machine", target:"3×10-12", note:"Or Nordic curl negatives if no machine.", sets:3},
+      {name:"Standing Calf Raise", target:"3×15", note:"Full range, pause at the top.", sets:3},
+      {name:"Pistol Squat Progression", target:"3×5 each", note:"Box-assisted if needed.", sets:3}
+    ]},
+  { id:4, tag:"Day 4 / Skills", title:"Skills + Conditioning", sub:"Fat loss",
+    desc:"Static holds for control and visible tension, then a short conditioning finisher.",
+    exercises:[
+      {name:"Wall Handstand Hold", target:"5×30-45s", note:"Focus on a hollow body line.", sets:5},
+      {name:"L-Sit (or Tuck Sit)", target:"5×10-20s", note:"Tuck one or both knees if full L-sit isn't there yet.", sets:5},
+      {name:"Tuck Front Lever Hold", target:"4×10-15s", note:"On the lat pulldown bar or rings.", sets:4},
+      {name:"Hollow Body Rocks", target:"3×15", note:"Dynamic version, keeps the core honest.", sets:3}
+    ],
+    finisher:{ title:"Conditioning finisher — EMOM 12", note:"Every minute for 12 min, alternate: Minute A — 12 burpees. Minute B — 20 mountain climbers + 10 jump squats." }},
+  { id:5, tag:"Day 5 / Push", title:"Push — Hypertrophy", sub:"Volume",
+    desc:"Same muscles as Day 1, higher reps and shorter rest — the volume that builds visible size.",
+    exercises:[
+      {name:"DB Shoulder Press", target:"4×10-12", note:"Seated or standing, controlled tempo.", sets:4},
+      {name:"Push-ups (weighted or deficit)", target:"4×AMRAP", note:"Plate on back or hands on blocks.", sets:4},
+      {name:"Cable Fly (low-to-high)", target:"3×15", note:"Targets upper chest.", sets:3},
+      {name:"Diamond Push-ups", target:"3×AMRAP", note:"Triceps-focused.", sets:3},
+      {name:"Cable Lateral Raise", target:"3×15 each arm", note:"Keep it light and strict.", sets:3}
+    ]},
+  { id:6, tag:"Day 6 / Pull", title:"Pull — Hypertrophy", sub:"Volume",
+    desc:"Higher-rep back and arm work — keep rest short (60-75s).",
+    exercises:[
+      {name:"Close-Grip Lat Pulldown", target:"4×10-12", note:"Different grip to Day 2.", sets:4},
+      {name:"Wide-Grip Cable Row", target:"3×12", note:"Elbows high and wide.", sets:3},
+      {name:"Straight-Arm Pulldown", target:"3×12", note:"Slow and controlled.", sets:3},
+      {name:"Hammer Curl", target:"3×12", note:"DB or cable rope attachment.", sets:3},
+      {name:"Rear Delt Cable Fly", target:"3×15", note:"Keeps shoulders balanced.", sets:3},
+      {name:"Hanging or Lying Leg Raise", target:"3×15", note:"Use the cable pulldown bar or floor.", sets:3}
+    ]},
+  { id:7, tag:"Day 7 / Rest", title:"Rest & Mobility", sub:"Recovery",
+    desc:"The one day you shouldn't skip skipping — this is where the muscle actually shows up.",
+    exercises:[
+      {name:"Shoulder & Thoracic Mobility", target:"10 min", note:"Band pull-aparts, cat-cow, wall slides.", sets:1},
+      {name:"Hip Flexor & Hamstring Stretch", target:"10 min", note:"Couch stretch, seated forward fold.", sets:1},
+      {name:"Easy Walk or Light Cardio", target:"20-30 min", note:"Conversational pace.", sets:1}
+    ]}
+];
+
+const SKILLS = [
+  {id:"muscleup", name:"Muscle-Up", steps:["Wide-grip pulldown at full bodyweight equivalent, 4×6","Explosive high pulldowns — bar to sternum, fast","Straight bar dips or bench dips ×15 clean","Negative muscle-up on rings/bar (3-4s lower) ×3","First full muscle-up"]},
+  {id:"hspu", name:"Handstand Push-up", steps:["Freestanding handstand hold, 30s+","Wall handstand hold, 60s","Pike push-up, feet fully elevated, 3×8","Wall HSPU with head touching floor, 3×3","First freestanding HSPU"]},
+  {id:"frontlever", name:"Front Lever", steps:["Tuck front lever hold, 20s","Advanced tuck (hips open, knees bent), 15s","Straddle front lever, 10s","Half-lay front lever, 8s","Full front lever, 5s"]},
+  {id:"planche", name:"Planche", steps:["Planche lean (straight arms, weight forward), 30s","Frog / tuck planche hold, 15s","Advanced tuck planche, 10s","Straddle planche, 5s","Full planche, 3s"]},
+  {id:"pistol", name:"Pistol Squat", steps:["Box-assisted pistol (sit to box), 3×8 each leg","Pistol with hand assist (holding a post), 3×6 each","Slow negative pistol, no assist, 3×5 each","Full unassisted pistol, 3×3 each","Weighted pistol squat"]}
+];
+
+/* ============ STATE ============ */
+const todayKey = () => new Date().toISOString().slice(0,10);
+const USERNAME_KEY = "ironrig_username_v1";
+const DAY_KEY = "ironrig_currentday_v1";
+
+let username = null;
+let log = {};
+let skillState = {};
+let currentDay = parseInt(localStorage.getItem(DAY_KEY)) || 1;
+let saveTimer = null;
+
+/* ============ CLOUD STORAGE (Supabase) ============ */
+async function cloudLoad(key){
+  if(!sb) return null;
+  const { data, error } = await sb.from('app_data').select('data_value').eq('username', username).eq('data_key', key).maybeSingle();
+  if(error){ console.error('Load error:', error); return null; }
+  return data ? data.data_value : null;
+}
+async function cloudSave(key, value){
+  if(!sb) return;
+  const { error } = await sb.from('app_data').upsert(
+    { username, data_key: key, data_value: value, updated_at: new Date().toISOString() },
+    { onConflict: 'username,data_key' }
+  );
+  if(error){ console.error('Save error:', error); return; }
+  flashSaved();
+}
+function flashSaved(){
+  const pill = document.getElementById('savePill');
+  pill.classList.add('show');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=> pill.classList.remove('show'), 1200);
+}
+
+/* ============ LOGIN ============ */
+function handleLogin(){
+  const input = document.getElementById('usernameInput');
+  const val = input.value.trim();
+  const errEl = document.getElementById('loginError');
+  if(!/^[a-zA-Z0-9_]{2,24}$/.test(val)){
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  username = val.toLowerCase();
+  localStorage.setItem(USERNAME_KEY, username);
+  boot();
+}
+function logout(){
+  if(confirm('Log out? Your data stays saved in the cloud under "'+username+'" — log back in with the same username anytime.')){
+    localStorage.removeItem(USERNAME_KEY);
+    location.reload();
+  }
+}
+
+/* ============ BOOT ============ */
+async function boot(){
+  if(!sb){
+    alert("Supabase isn't configured yet. Open index.html and paste your SUPABASE_URL and SUPABASE_ANON_KEY at the top of the <script> tag.");
+  }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'block';
+  document.getElementById('userChip').textContent = username + ' · logout';
+
+  const [savedLog, savedSkills] = await Promise.all([ cloudLoad('log'), cloudLoad('skills') ]);
+  log = savedLog || {};
+  skillState = savedSkills || {};
+
+  renderTrain();
+  renderSkills();
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  const saved = localStorage.getItem(USERNAME_KEY);
+  if(saved){ username = saved; boot(); }
+  document.getElementById('usernameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
+});
+
+/* ============ RENDER: TRAIN VIEW ============ */
+function renderRail(){
+  const rail = document.getElementById('dayRail');
+  rail.innerHTML = '';
+  PROGRAM.forEach(d=>{
+    const chip = document.createElement('div');
+    const doneToday = log[todayKey()] && log[todayKey()].dayId === d.id;
+    chip.className = 'day-chip' + (d.id===currentDay?' active':'') + (doneToday?' done':'');
+    chip.innerHTML = `Day ${d.id}<span class="sub">${d.title.split(' — ')[0]}</span>`;
+    chip.onclick = () => { currentDay = d.id; localStorage.setItem(DAY_KEY, d.id); renderTrain(); };
+    rail.appendChild(chip);
+  });
+}
+
+function getTodayEntry(){
+  const key = todayKey();
+  if(!log[key] || log[key].dayId !== currentDay){
+    log[key] = { dayId: currentDay, sets: {}, weights: {} };
+  }
+  if(!log[key].weights) log[key].weights = {};
+  return log[key];
+}
+
+function getLastWeight(dayId, exIdx){
+  const keys = Object.keys(log).filter(k => k !== todayKey() && log[k].dayId === dayId && log[k].weights && log[k].weights[exIdx]).sort().reverse();
+  if(keys.length===0) return null;
+  return { date: keys[0], ...log[keys[0]].weights[exIdx] };
+}
+
+function renderTrain(){
+  renderRail();
+  const day = PROGRAM.find(d=>d.id===currentDay);
+  document.getElementById('sessionEyebrow').textContent = day.tag.toUpperCase() + ' · ' + day.sub.toUpperCase();
+  document.getElementById('sessionTitle').textContent = day.title;
+  document.getElementById('sessionDesc').textContent = day.desc;
+
+  const entry = getTodayEntry();
+  const list = document.getElementById('exerciseList');
+  list.innerHTML = '';
+  day.exercises.forEach((ex, i)=>{
+    if(!entry.sets[i]) entry.sets[i] = new Array(ex.sets).fill(false);
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    let boxes = '';
+    for(let s=0; s<ex.sets; s++){
+      boxes += `<div class="set-box ${entry.sets[i][s]?'checked':''}" onclick="toggleSet(${i},${s})">${entry.sets[i][s]?'✓':s+1}</div>`;
+    }
+    const cur = entry.weights[i] || {};
+    const last = getLastWeight(day.id, i);
+    card.innerHTML = `
+      <div class="ex-top">
+        <div class="ex-name">${ex.name}</div>
+        <div class="ex-target">${ex.target}</div>
+      </div>
+      <div class="ex-note">${ex.note}</div>
+      <div class="sets-row">${boxes}</div>
+      <div class="log-row">
+        <div class="log-field">
+          <label>Weight (kg)</label>
+          <input type="number" inputmode="decimal" placeholder="0" value="${cur.weight ?? ''}" onchange="updateWeight(${i},'weight',this.value)">
+        </div>
+        <div class="log-field">
+          <label>Reps</label>
+          <input type="number" inputmode="numeric" placeholder="0" value="${cur.reps ?? ''}" onchange="updateWeight(${i},'reps',this.value)">
+        </div>
+      </div>
+      ${last ? `<div class="last-time">Last time (${last.date}): <b>${last.weight ?? '—'} kg × ${last.reps ?? '—'}</b> — beat it today.</div>` : `<div class="last-time">First time logging this one — set the baseline.</div>`}
+    `;
+    list.appendChild(card);
+  });
+
+  const finisherBlock = document.getElementById('finisherBlock');
+  finisherBlock.innerHTML = '';
+  if(day.finisher){
+    finisherBlock.innerHTML = `
+      <div class="block-label">Finisher</div>
+      <div class="ex-card">
+        <div class="ex-name">${day.finisher.title}</div>
+        <div class="ex-note" style="margin-top:8px;">${day.finisher.note}</div>
+      </div>
+    `;
+  }
+  persistLog();
+  updateStreak();
+}
+
+function toggleSet(exIdx, setIdx){
+  const entry = getTodayEntry();
+  entry.sets[exIdx][setIdx] = !entry.sets[exIdx][setIdx];
+  renderTrain();
+}
+
+function updateWeight(exIdx, field, value){
+  const entry = getTodayEntry();
+  if(!entry.weights[exIdx]) entry.weights[exIdx] = {};
+  entry.weights[exIdx][field] = value === '' ? null : Number(value);
+  persistLog();
+}
+
+function persistLog(){
+  cloudSave('log', log);
+}
+
+/* ============ STREAK ============ */
+function computeStreak(){
+  let streak = 0; let d = new Date();
+  while(true){
+    const key = d.toISOString().slice(0,10);
+    const entry = log[key];
+    const hasWork = entry && Object.values(entry.sets).some(arr => arr.some(v=>v));
+    if(hasWork){ streak++; d.setDate(d.getDate()-1); } else break;
+  }
+  return streak;
+}
+function computeBestStreak(){
+  const days = Object.keys(log).filter(k => Object.values(log[k].sets).some(arr=>arr.some(v=>v))).sort();
+  if(days.length===0) return 0;
+  let best=1, cur=1;
+  for(let i=1;i<days.length;i++){
+    const diff = (new Date(days[i]) - new Date(days[i-1]))/(1000*60*60*24);
+    if(diff===1){ cur++; best=Math.max(best,cur); } else { cur=1; }
+  }
+  return Math.max(best, computeStreak());
+}
+function updateStreak(){ document.getElementById('streakNum').textContent = computeStreak(); }
+
+/* ============ RENDER: SKILLS VIEW ============ */
+function renderSkills(){
+  const list = document.getElementById('skillsList');
+  list.innerHTML = '';
+  SKILLS.forEach(sk=>{
+    if(!skillState[sk.id]) skillState[sk.id] = new Array(sk.steps.length).fill(false);
+    const doneCount = skillState[sk.id].filter(Boolean).length;
+    const pct = Math.round((doneCount/sk.steps.length)*100);
+    const div = document.createElement('div');
+    div.className = 'skill';
+    let stepsHtml = '';
+    sk.steps.forEach((step,i)=>{
+      const done = skillState[sk.id][i];
+      stepsHtml += `<div class="step ${done?'done':''}" onclick="toggleSkillStep('${sk.id}',${i})"><div class="box"></div><div>${step}</div></div>`;
+    });
+    div.innerHTML = `<h3>${sk.name} <span class="pct">${pct}%</span></h3>${stepsHtml}`;
+    list.appendChild(div);
+  });
+}
+function toggleSkillStep(id, i){
+  skillState[id][i] = !skillState[id][i];
+  cloudSave('skills', skillState);
+  renderSkills();
+}
+
+/* ============ RENDER: PROGRESS VIEW ============ */
+function renderProgress(){
+  const loggedDays = Object.keys(log).filter(k => Object.values(log[k].sets).some(arr=>arr.some(v=>v)));
+  document.getElementById('statStreak').textContent = computeStreak();
+  document.getElementById('statTotal').textContent = loggedDays.length;
+  document.getElementById('statBest').textContent = computeBestStreak();
+
+  let weekCount = 0;
+  for(let i=0;i<7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    if(log[key] && Object.values(log[key].sets).some(arr=>arr.some(v=>v))) weekCount++;
+  }
+  document.getElementById('statWeek').textContent = weekCount + '/6';
+
+  const hist = document.getElementById('historyList');
+  hist.innerHTML = '';
+  const sorted = loggedDays.sort().reverse().slice(0,14);
+  if(sorted.length===0){
+    hist.innerHTML = '<div class="empty">No sessions logged yet. Check off a set on the Train tab to get started.</div>';
+  } else {
+    sorted.forEach(key=>{
+      const entry = log[key];
+      const day = PROGRAM.find(d=>d.id===entry.dayId);
+      const totalSets = Object.values(entry.sets).reduce((a,arr)=>a+arr.length,0);
+      const doneSets = Object.values(entry.sets).reduce((a,arr)=>a+arr.filter(v=>v).length,0);
+      const row = document.createElement('div');
+      row.className = 'ex-card';
+      row.style.padding = '12px 16px';
+      row.innerHTML = `<div class="ex-top">
+        <div><div class="ex-name" style="font-size:14px;">${day.title}</div>
+        <div class="ex-note" style="margin-top:2px;">${key}</div></div>
+        <div class="ex-target">${doneSets}/${totalSets} sets</div>
+      </div>`;
+      hist.appendChild(row);
+    });
+  }
+}
+
+async function resetAll(){
+  if(confirm('Clear all logged sessions and skill progress for "'+username+'"? This cannot be undone.')){
+    log = {}; skillState = {};
+    await cloudSave('log', log);
+    await cloudSave('skills', skillState);
+    renderTrain(); renderSkills(); renderProgress();
+  }
+}
+
+/* ============ NAV ============ */
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelector(`.nav-btn[data-view="${name}"]`).classList.add('active');
+  if(name==='skills') renderSkills();
+  if(name==='progress') renderProgress();
+}
+</script>
+</body>
+</html>
