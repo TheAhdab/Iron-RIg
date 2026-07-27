@@ -281,7 +281,7 @@ let saveTimer = null;
 async function cloudLoad(key){
   if(!sb) return null;
   const { data, error } = await sb.from('app_data').select('data_value').eq('username', username).eq('data_key', key).maybeSingle();
-  if(error){ console.error('Load error:', error); return null; }
+  if(error){ console.error('Load error:', error); showCloudError('Load failed: ' + error.message); return null; }
   return data ? data.data_value : null;
 }
 async function cloudSave(key, value){
@@ -290,14 +290,25 @@ async function cloudSave(key, value){
     { username, data_key: key, data_value: value, updated_at: new Date().toISOString() },
     { onConflict: 'username,data_key' }
   );
-  if(error){ console.error('Save error:', error); return; }
+  if(error){ console.error('Save error:', error); showCloudError('Save failed: ' + error.message); return; }
   flashSaved();
 }
 function flashSaved(){
   const pill = document.getElementById('savePill');
-  pill.classList.add('show');
+  pill.className = 'save-pill show';
+  pill.textContent = 'Saved to cloud';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=> pill.classList.remove('show'), 1200);
+}
+function showCloudError(msg){
+  const pill = document.getElementById('savePill');
+  pill.className = 'save-pill show';
+  pill.style.background = '#3a1410';
+  pill.style.borderColor = 'var(--red)';
+  pill.style.color = 'var(--red)';
+  pill.textContent = msg;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=> { pill.classList.remove('show'); pill.style.background=''; pill.style.borderColor=''; pill.style.color=''; }, 6000);
 }
 
 /* ============ LOGIN ============ */
@@ -344,13 +355,23 @@ window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('usernameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
 });
 
-/* ============ RENDER: TRAIN VIEW ============ */
+/* ============ RENDER: TRAIN VIEW ============
+   Sessions are keyed by DATE + DAY (e.g. "2026-07-27__d2"), not just date.
+   That way picking Day 2 to look at it doesn't overwrite Day 1's session
+   if you already logged Day 1 earlier the same day.
+*/
+function sessionKey(dateStr, dayId){ return dateStr + '__d' + dayId; }
+
+function entryHasWork(entry){
+  return entry && entry.sets && Object.values(entry.sets).some(arr => arr.some(v=>v));
+}
+
 function renderRail(){
   const rail = document.getElementById('dayRail');
   rail.innerHTML = '';
   PROGRAM.forEach(d=>{
     const chip = document.createElement('div');
-    const doneToday = log[todayKey()] && log[todayKey()].dayId === d.id;
+    const doneToday = entryHasWork(log[sessionKey(todayKey(), d.id)]);
     chip.className = 'day-chip' + (d.id===currentDay?' active':'') + (doneToday?' done':'');
     chip.innerHTML = `Day ${d.id}<span class="sub">${d.title.split(' — ')[0]}</span>`;
     chip.onclick = () => { currentDay = d.id; localStorage.setItem(DAY_KEY, d.id); renderTrain(); };
@@ -359,18 +380,20 @@ function renderRail(){
 }
 
 function getTodayEntry(){
-  const key = todayKey();
-  if(!log[key] || log[key].dayId !== currentDay){
-    log[key] = { dayId: currentDay, sets: {}, weights: {} };
+  const key = sessionKey(todayKey(), currentDay);
+  if(!log[key]){
+    log[key] = { date: todayKey(), dayId: currentDay, sets: {}, weights: {} };
   }
   if(!log[key].weights) log[key].weights = {};
   return log[key];
 }
 
 function getLastWeight(dayId, exIdx){
-  const keys = Object.keys(log).filter(k => k !== todayKey() && log[k].dayId === dayId && log[k].weights && log[k].weights[exIdx]).sort().reverse();
-  if(keys.length===0) return null;
-  return { date: keys[0], ...log[keys[0]].weights[exIdx] };
+  const past = Object.values(log)
+    .filter(entry => entry.dayId === dayId && entry.date !== todayKey() && entry.weights && entry.weights[exIdx])
+    .sort((a,b) => a.date < b.date ? 1 : -1);
+  if(past.length===0) return null;
+  return { date: past[0].date, ...past[0].weights[exIdx] };
 }
 
 function renderTrain(){
@@ -426,13 +449,13 @@ function renderTrain(){
       </div>
     `;
   }
-  persistLog();
   updateStreak();
 }
 
 function toggleSet(exIdx, setIdx){
   const entry = getTodayEntry();
   entry.sets[exIdx][setIdx] = !entry.sets[exIdx][setIdx];
+  persistLog();
   renderTrain();
 }
 
@@ -448,18 +471,22 @@ function persistLog(){
 }
 
 /* ============ STREAK ============ */
+function datesWithWork(){
+  const dates = new Set();
+  Object.values(log).forEach(entry => { if(entryHasWork(entry)) dates.add(entry.date); });
+  return dates;
+}
 function computeStreak(){
+  const dates = datesWithWork();
   let streak = 0; let d = new Date();
   while(true){
     const key = d.toISOString().slice(0,10);
-    const entry = log[key];
-    const hasWork = entry && Object.values(entry.sets).some(arr => arr.some(v=>v));
-    if(hasWork){ streak++; d.setDate(d.getDate()-1); } else break;
+    if(dates.has(key)){ streak++; d.setDate(d.getDate()-1); } else break;
   }
   return streak;
 }
 function computeBestStreak(){
-  const days = Object.keys(log).filter(k => Object.values(log[k].sets).some(arr=>arr.some(v=>v))).sort();
+  const days = Array.from(datesWithWork()).sort();
   if(days.length===0) return 0;
   let best=1, cur=1;
   for(let i=1;i<days.length;i++){
@@ -497,27 +524,26 @@ function toggleSkillStep(id, i){
 
 /* ============ RENDER: PROGRESS VIEW ============ */
 function renderProgress(){
-  const loggedDays = Object.keys(log).filter(k => Object.values(log[k].sets).some(arr=>arr.some(v=>v)));
+  const loggedSessions = Object.values(log).filter(entryHasWork);
   document.getElementById('statStreak').textContent = computeStreak();
-  document.getElementById('statTotal').textContent = loggedDays.length;
+  document.getElementById('statTotal').textContent = loggedSessions.length;
   document.getElementById('statBest').textContent = computeBestStreak();
 
+  const dates = datesWithWork();
   let weekCount = 0;
   for(let i=0;i<7;i++){
     const d = new Date(); d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    if(log[key] && Object.values(log[key].sets).some(arr=>arr.some(v=>v))) weekCount++;
+    if(dates.has(d.toISOString().slice(0,10))) weekCount++;
   }
   document.getElementById('statWeek').textContent = weekCount + '/6';
 
   const hist = document.getElementById('historyList');
   hist.innerHTML = '';
-  const sorted = loggedDays.sort().reverse().slice(0,14);
+  const sorted = loggedSessions.sort((a,b)=> a.date < b.date ? 1 : -1).slice(0,14);
   if(sorted.length===0){
     hist.innerHTML = '<div class="empty">No sessions logged yet. Check off a set on the Train tab to get started.</div>';
   } else {
-    sorted.forEach(key=>{
-      const entry = log[key];
+    sorted.forEach(entry=>{
       const day = PROGRAM.find(d=>d.id===entry.dayId);
       const totalSets = Object.values(entry.sets).reduce((a,arr)=>a+arr.length,0);
       const doneSets = Object.values(entry.sets).reduce((a,arr)=>a+arr.filter(v=>v).length,0);
@@ -526,7 +552,7 @@ function renderProgress(){
       row.style.padding = '12px 16px';
       row.innerHTML = `<div class="ex-top">
         <div><div class="ex-name" style="font-size:14px;">${day.title}</div>
-        <div class="ex-note" style="margin-top:2px;">${key}</div></div>
+        <div class="ex-note" style="margin-top:2px;">${entry.date}</div></div>
         <div class="ex-target">${doneSets}/${totalSets} sets</div>
       </div>`;
       hist.appendChild(row);
