@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IRON RIG — Your Training Log</title>
+<title>IRON RIG — 30-Day Challenge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -41,12 +41,14 @@
   .login-note{font-size:12px; color:var(--steel); margin-top:14px; line-height:1.5;}
   .login-error{color:var(--red); font-size:13px; margin-bottom:10px; display:none;}
 
-  .rail{display:flex; gap:8px; overflow-x:auto; padding:10px 0 20px; scrollbar-width:none;}
+  .rail{display:flex; gap:8px; overflow-x:auto; padding:10px 0 20px; scrollbar-width:none; align-items:center;}
   .rail::-webkit-scrollbar{display:none;}
+  .week-label{flex:0 0 auto; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--steel); padding:0 4px 0 2px; letter-spacing:0.05em;}
   .day-chip{flex:0 0 auto; padding:10px 14px; border-radius:10px; background:var(--card); border:1px solid var(--line); font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.03em; text-transform:uppercase; color:var(--chalk-dim); cursor:pointer; white-space:nowrap; transition:all .15s ease;}
   .day-chip .sub{display:block; font-size:10px; color:var(--steel); margin-top:2px; font-family:'Inter',sans-serif; text-transform:none; letter-spacing:0;}
   .day-chip.active{background:var(--red); border-color:var(--red); color:#1a0a08;}
   .day-chip.active .sub{color:#3a1410;}
+  .day-chip.today{box-shadow:0 0 0 2px var(--amber) inset;}
   .day-chip.done{border-color:var(--green);}
   .day-chip.done::after{content:'✓'; color:var(--green); margin-left:6px;}
 
@@ -54,6 +56,8 @@
   .session-head .eyebrow{color:var(--red); font-size:12px; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em;}
   .session-head h2{font-size:30px; margin:4px 0 6px;}
   .session-head p{color:var(--chalk-dim); font-size:14px; line-height:1.5;}
+  .week-note{margin-top:12px; background:var(--card); border:1px solid var(--red-dim); border-left:3px solid var(--red); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--chalk-dim); line-height:1.5;}
+  .week-note b{color:var(--amber);}
 
   .ex-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 16px 14px; margin-bottom:12px;}
   .ex-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
@@ -109,7 +113,7 @@
   <div class="login-card">
     <div class="mark">/ IRON RIG</div>
     <h1>Who's training?</h1>
-    <p>Pick a username. No password — enter the same name next time, on any device, and your log picks up right where you left it.</p>
+    <p>Pick a username. No password — enter the same name next time, on any device, and your 30-day challenge picks up right where you left it.</p>
     <div class="login-error" id="loginError">Letters, numbers, and underscores only, 2-24 characters.</div>
     <input class="login-input" id="usernameInput" placeholder="e.g. kwame_23" autocomplete="off" maxlength="24">
     <button class="btn-primary" id="loginBtn" onclick="handleLogin()">Continue</button>
@@ -130,9 +134,10 @@
     <section id="view-train" class="view active">
       <div class="rail" id="dayRail"></div>
       <div class="session-head">
-        <div class="eyebrow" id="sessionEyebrow">DAY 1 / PUSH</div>
+        <div class="eyebrow" id="sessionEyebrow">DAY 1 OF 30 · WEEK 1</div>
         <h2 id="sessionTitle">Push — Strength</h2>
         <p id="sessionDesc"></p>
+        <div class="week-note" id="weekNote"></div>
       </div>
       <div id="exerciseList"></div>
       <div id="finisherBlock"></div>
@@ -155,11 +160,18 @@
       <div class="grid2">
         <div class="stat"><div class="num" id="statStreak">0</div><div class="label">Current streak</div></div>
         <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Sessions logged</div></div>
-        <div class="stat"><div class="num" id="statWeek">0/6</div><div class="label">This week</div></div>
+        <div class="stat"><div class="num" id="statCycle">1/30</div><div class="label">Challenge day</div></div>
         <div class="stat"><div class="num" id="statBest">0</div><div class="label">Best streak</div></div>
       </div>
       <div class="block-label">History</div>
       <div id="historyList"></div>
+      <div class="block-label">Challenge</div>
+      <div class="ex-card">
+        <p class="ex-note">The 30-day cycle auto-restarts on Day 31 — you don't need to do anything. If you want to jump back to Day 1 early (e.g. you took a long break), use this.</p>
+        <div style="margin-top:12px;">
+          <span class="day-chip" onclick="restartChallenge()">Restart challenge from Day 1</span>
+        </div>
+      </div>
       <div class="block-label">Reset</div>
       <div class="ex-card">
         <p class="ex-note">This clears all logged sessions and skill progress for this username in the cloud. Can't be undone.</p>
@@ -179,8 +191,7 @@
 
 <script>
 /* ======================================================================
-   SUPABASE SETUP — paste your own project's values here.
-   Get these from your Supabase project: Settings → API
+   SUPABASE SETUP
    ====================================================================== */
 const SUPABASE_URL = 'https://pmwknobatlhuaddkuhee.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtd2tub2JhdGxodWFkZGt1aGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNzkzNDQsImV4cCI6MjEwMDc1NTM0NH0.rvYoMaSygaGpoEKLTnc3UZkHzoDd1ukd1N6N9aGYzTo';
@@ -189,9 +200,9 @@ const sb = (SUPABASE_URL.startsWith('http'))
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
-/* ============ PROGRAM DATA ============ */
-const PROGRAM = [
-  { id:1, tag:"Day 1 / Push", title:"Push — Strength", sub:"Heavy",
+/* ============ WEEKLY TEMPLATE (repeats 4x, plus a 2-day finale = 30 days) ============ */
+const WEEK_TEMPLATE = [
+  { tag:"Push", title:"Push — Strength", sub:"Heavy",
     desc:"Chest, shoulders, triceps. Low reps, real loads.",
     exercises:[
       {name:"Barbell or DB Bench Press", target:"4×6-8", note:"Add weight when you hit 8 clean reps on all 4 sets.", sets:4},
@@ -201,7 +212,7 @@ const PROGRAM = [
       {name:"Cable Chest Fly", target:"3×12-15", note:"Slow eccentric, squeeze at the center.", sets:3},
       {name:"Hollow Body Hold", target:"3×30-40s", note:"Core finisher — lower back stays glued to the floor.", sets:3}
     ]},
-  { id:2, tag:"Day 2 / Pull", title:"Pull — Strength", sub:"Heavy",
+  { tag:"Pull", title:"Pull — Strength", sub:"Heavy",
     desc:"Back and biceps, built around the cable stack since there's no bar.",
     exercises:[
       {name:"Wide-Grip Lat Pulldown", target:"4×6-8", note:"Your main pull-up substitute — go heavy.", sets:4},
@@ -211,7 +222,7 @@ const PROGRAM = [
       {name:"Cable or DB Bicep Curl", target:"3×12", note:"Strict, no swinging.", sets:3},
       {name:"Straight-Arm Pulldown", target:"3×12-15", note:"Lat isolation, arms stay straight throughout.", sets:3}
     ]},
-  { id:3, tag:"Day 3 / Legs", title:"Legs", sub:"Heavy",
+  { tag:"Legs", title:"Legs", sub:"Heavy",
     desc:"Full lower body — keeps your hips and core stable for skill work.",
     exercises:[
       {name:"Barbell Back Squat (or Goblet Squat)", target:"4×6-10", note:"Use whichever your gym setup makes safest.", sets:4},
@@ -221,7 +232,7 @@ const PROGRAM = [
       {name:"Standing Calf Raise", target:"3×15", note:"Full range, pause at the top.", sets:3},
       {name:"Pistol Squat Progression", target:"3×5 each", note:"Box-assisted if needed.", sets:3}
     ]},
-  { id:4, tag:"Day 4 / Skills", title:"Skills + Conditioning", sub:"Fat loss",
+  { tag:"Skills", title:"Skills + Conditioning", sub:"Fat loss",
     desc:"Static holds for control and visible tension, then a short conditioning finisher.",
     exercises:[
       {name:"Wall Handstand Hold", target:"5×30-45s", note:"Focus on a hollow body line.", sets:5},
@@ -230,8 +241,8 @@ const PROGRAM = [
       {name:"Hollow Body Rocks", target:"3×15", note:"Dynamic version, keeps the core honest.", sets:3}
     ],
     finisher:{ title:"Conditioning finisher — EMOM 12", note:"Every minute for 12 min, alternate: Minute A — 12 burpees. Minute B — 20 mountain climbers + 10 jump squats." }},
-  { id:5, tag:"Day 5 / Push", title:"Push — Hypertrophy", sub:"Volume",
-    desc:"Same muscles as Day 1, higher reps and shorter rest — the volume that builds visible size.",
+  { tag:"Push", title:"Push — Hypertrophy", sub:"Volume",
+    desc:"Same muscles as your strength day, higher reps and shorter rest — the volume that builds visible size.",
     exercises:[
       {name:"DB Shoulder Press", target:"4×10-12", note:"Seated or standing, controlled tempo.", sets:4},
       {name:"Push-ups (weighted or deficit)", target:"4×AMRAP", note:"Plate on back or hands on blocks.", sets:4},
@@ -239,17 +250,17 @@ const PROGRAM = [
       {name:"Diamond Push-ups", target:"3×AMRAP", note:"Triceps-focused.", sets:3},
       {name:"Cable Lateral Raise", target:"3×15 each arm", note:"Keep it light and strict.", sets:3}
     ]},
-  { id:6, tag:"Day 6 / Pull", title:"Pull — Hypertrophy", sub:"Volume",
+  { tag:"Pull", title:"Pull — Hypertrophy", sub:"Volume",
     desc:"Higher-rep back and arm work — keep rest short (60-75s).",
     exercises:[
-      {name:"Close-Grip Lat Pulldown", target:"4×10-12", note:"Different grip to Day 2.", sets:4},
+      {name:"Close-Grip Lat Pulldown", target:"4×10-12", note:"Different grip to your strength day.", sets:4},
       {name:"Wide-Grip Cable Row", target:"3×12", note:"Elbows high and wide.", sets:3},
       {name:"Straight-Arm Pulldown", target:"3×12", note:"Slow and controlled.", sets:3},
       {name:"Hammer Curl", target:"3×12", note:"DB or cable rope attachment.", sets:3},
       {name:"Rear Delt Cable Fly", target:"3×15", note:"Keeps shoulders balanced.", sets:3},
       {name:"Hanging or Lying Leg Raise", target:"3×15", note:"Use the cable pulldown bar or floor.", sets:3}
     ]},
-  { id:7, tag:"Day 7 / Rest", title:"Rest & Mobility", sub:"Recovery",
+  { tag:"Rest", title:"Rest & Mobility", sub:"Recovery",
     desc:"The one day you shouldn't skip skipping — this is where the muscle actually shows up.",
     exercises:[
       {name:"Shoulder & Thoracic Mobility", target:"10 min", note:"Band pull-aparts, cat-cow, wall slides.", sets:1},
@@ -257,6 +268,35 @@ const PROGRAM = [
       {name:"Easy Walk or Light Cardio", target:"20-30 min", note:"Conversational pace.", sets:1}
     ]}
 ];
+
+const WEEK_NOTES = {
+  1: "Week 1 — Baseline. Log your starting weight and reps honestly on every exercise. This is the number you're chasing by Day 30.",
+  2: "Week 2 — Build. Hit every rep clean last week? Add 2.5–5kg or 1–2 reps per exercise this week.",
+  3: "Week 3 — Push. You should be lifting more, or doing more reps, than Week 1 on almost everything by now.",
+  4: "Week 4 — Grind. This is the hardest week for most people. Hold your numbers steady if you need to — just don't go backwards.",
+  5: "Final stretch — Days 29–30. Give it everything and try to beat your Day 1–2 numbers before the challenge loops back to Day 1."
+};
+
+function buildProgram(){
+  const arr = [];
+  for(let i=0; i<30; i++){
+    const week = Math.floor(i/7) + 1;
+    const t = WEEK_TEMPLATE[i % 7];
+    arr.push({
+      id: i+1,
+      week: week,
+      tag: `Day ${i+1} / ${t.tag}`,
+      title: t.title,
+      sub: t.sub,
+      desc: t.desc,
+      weekNote: WEEK_NOTES[week],
+      exercises: t.exercises,
+      finisher: t.finisher
+    });
+  }
+  return arr;
+}
+const PROGRAM = buildProgram();
 
 const SKILLS = [
   {id:"muscleup", name:"Muscle-Up", steps:["Wide-grip pulldown at full bodyweight equivalent, 4×6","Explosive high pulldowns — bar to sternum, fast","Straight bar dips or bench dips ×15 clean","Negative muscle-up on rings/bar (3-4s lower) ×3","First full muscle-up"]},
@@ -266,15 +306,38 @@ const SKILLS = [
   {id:"pistol", name:"Pistol Squat", steps:["Box-assisted pistol (sit to box), 3×8 each leg","Pistol with hand assist (holding a post), 3×6 each","Slow negative pistol, no assist, 3×5 each","Full unassisted pistol, 3×3 each","Weighted pistol squat"]}
 ];
 
+/* ============ DATE HELPERS (local time, not UTC — avoids day-rollover glitches) ============ */
+function localDateStr(d){
+  d = d || new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+const todayKey = () => localDateStr();
+
+function daysBetween(dateStrA, dateStrB){
+  const [ay,am,ad] = dateStrA.split('-').map(Number);
+  const [by,bm,bd] = dateStrB.split('-').map(Number);
+  const a = Date.UTC(ay, am-1, ad);
+  const b = Date.UTC(by, bm-1, bd);
+  return Math.round((b-a) / 86400000);
+}
+
+function computeCurrentDay(startDate){
+  const diff = daysBetween(startDate, todayKey());
+  const idx = ((diff % 30) + 30) % 30; // safe modulo, handles any drift
+  return idx + 1;
+}
+
 /* ============ STATE ============ */
-const todayKey = () => new Date().toISOString().slice(0,10);
 const USERNAME_KEY = "ironrig_username_v1";
-const DAY_KEY = "ironrig_currentday_v1";
 
 let username = null;
 let log = {};
 let skillState = {};
-let currentDay = parseInt(localStorage.getItem(DAY_KEY)) || 1;
+let challengeMeta = null; // { startDate: 'YYYY-MM-DD' }
+let currentDay = 1;
 let saveTimer = null;
 
 /* ============ CLOUD STORAGE (Supabase) ============ */
@@ -333,6 +396,15 @@ function logout(){
 }
 
 /* ============ BOOT ============ */
+async function ensureChallengeStart(){
+  let meta = await cloudLoad('meta');
+  if(!meta || !meta.startDate){
+    meta = { startDate: todayKey() };
+    await cloudSave('meta', meta);
+  }
+  return meta;
+}
+
 async function boot(){
   if(!sb){
     alert("Supabase isn't configured yet. Open index.html and paste your SUPABASE_URL and SUPABASE_ANON_KEY at the top of the <script> tag.");
@@ -341,9 +413,11 @@ async function boot(){
   document.getElementById('appRoot').style.display = 'block';
   document.getElementById('userChip').textContent = username + ' · logout';
 
-  const [savedLog, savedSkills] = await Promise.all([ cloudLoad('log'), cloudLoad('skills') ]);
+  const [savedLog, savedSkills, meta] = await Promise.all([ cloudLoad('log'), cloudLoad('skills'), ensureChallengeStart() ]);
   log = savedLog || {};
   skillState = savedSkills || {};
+  challengeMeta = meta;
+  currentDay = computeCurrentDay(challengeMeta.startDate);
 
   renderTrain();
   renderSkills();
@@ -355,10 +429,20 @@ window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('usernameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
 });
 
+/* If the app is left open across midnight, re-sync to the correct day next time it's viewed */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && challengeMeta){
+    const correctDay = computeCurrentDay(challengeMeta.startDate);
+    if(correctDay !== currentDay){
+      currentDay = correctDay;
+      renderTrain();
+    }
+  }
+});
+
 /* ============ RENDER: TRAIN VIEW ============
-   Sessions are keyed by DATE + DAY (e.g. "2026-07-27__d2"), not just date.
-   That way picking Day 2 to look at it doesn't overwrite Day 1's session
-   if you already logged Day 1 earlier the same day.
+   Sessions are keyed by DATE + DAY (e.g. "2026-07-27__d2"), not just date,
+   so browsing to a different day doesn't overwrite another day's log.
 */
 function sessionKey(dateStr, dayId){ return dateStr + '__d' + dayId; }
 
@@ -369,13 +453,31 @@ function entryHasWork(entry){
 function renderRail(){
   const rail = document.getElementById('dayRail');
   rail.innerHTML = '';
+  const todaysAutoDay = computeCurrentDay(challengeMeta.startDate);
+  let lastWeek = 0;
   PROGRAM.forEach(d=>{
+    if(d.week !== lastWeek){
+      const label = document.createElement('div');
+      label.className = 'week-label';
+      label.textContent = 'W' + d.week;
+      rail.appendChild(label);
+      lastWeek = d.week;
+    }
     const chip = document.createElement('div');
     const doneToday = entryHasWork(log[sessionKey(todayKey(), d.id)]);
-    chip.className = 'day-chip' + (d.id===currentDay?' active':'') + (doneToday?' done':'');
+    let cls = 'day-chip';
+    if(d.id===currentDay) cls += ' active';
+    if(doneToday) cls += ' done';
+    if(d.id===todaysAutoDay && d.id!==currentDay) cls += ' today';
+    chip.className = cls;
     chip.innerHTML = `Day ${d.id}<span class="sub">${d.title.split(' — ')[0]}</span>`;
-    chip.onclick = () => { currentDay = d.id; localStorage.setItem(DAY_KEY, d.id); renderTrain(); };
+    chip.onclick = () => { currentDay = d.id; renderTrain(); };
     rail.appendChild(chip);
+  });
+  // auto-scroll the rail so today's chip is in view
+  requestAnimationFrame(()=>{
+    const active = rail.querySelector('.day-chip.active');
+    if(active) active.scrollIntoView({ inline:'center', block:'nearest' });
   });
 }
 
@@ -399,9 +501,10 @@ function getLastWeight(dayId, exIdx){
 function renderTrain(){
   renderRail();
   const day = PROGRAM.find(d=>d.id===currentDay);
-  document.getElementById('sessionEyebrow').textContent = day.tag.toUpperCase() + ' · ' + day.sub.toUpperCase();
+  document.getElementById('sessionEyebrow').textContent = `DAY ${day.id} OF 30 · WEEK ${day.week} · ${day.sub.toUpperCase()}`;
   document.getElementById('sessionTitle').textContent = day.title;
   document.getElementById('sessionDesc').textContent = day.desc;
+  document.getElementById('weekNote').innerHTML = day.weekNote;
 
   const entry = getTodayEntry();
   const list = document.getElementById('exerciseList');
@@ -470,7 +573,10 @@ function persistLog(){
   cloudSave('log', log);
 }
 
-/* ============ STREAK ============ */
+/* ============ STREAK ============
+   Fixed: a day only "breaks" the streak once it's fully skipped — not
+   simply because today hasn't been logged yet (you might still train today).
+*/
 function datesWithWork(){
   const dates = new Set();
   Object.values(log).forEach(entry => { if(entryHasWork(entry)) dates.add(entry.date); });
@@ -478,9 +584,13 @@ function datesWithWork(){
 }
 function computeStreak(){
   const dates = datesWithWork();
-  let streak = 0; let d = new Date();
+  let d = new Date();
+  if(!dates.has(localDateStr(d))){
+    d.setDate(d.getDate()-1); // today not logged yet — check from yesterday instead of zeroing out
+  }
+  let streak = 0;
   while(true){
-    const key = d.toISOString().slice(0,10);
+    const key = localDateStr(d);
     if(dates.has(key)){ streak++; d.setDate(d.getDate()-1); } else break;
   }
   return streak;
@@ -490,7 +600,7 @@ function computeBestStreak(){
   if(days.length===0) return 0;
   let best=1, cur=1;
   for(let i=1;i<days.length;i++){
-    const diff = (new Date(days[i]) - new Date(days[i-1]))/(1000*60*60*24);
+    const diff = daysBetween(days[i-1], days[i]);
     if(diff===1){ cur++; best=Math.max(best,cur); } else { cur=1; }
   }
   return Math.max(best, computeStreak());
@@ -528,18 +638,11 @@ function renderProgress(){
   document.getElementById('statStreak').textContent = computeStreak();
   document.getElementById('statTotal').textContent = loggedSessions.length;
   document.getElementById('statBest').textContent = computeBestStreak();
-
-  const dates = datesWithWork();
-  let weekCount = 0;
-  for(let i=0;i<7;i++){
-    const d = new Date(); d.setDate(d.getDate()-i);
-    if(dates.has(d.toISOString().slice(0,10))) weekCount++;
-  }
-  document.getElementById('statWeek').textContent = weekCount + '/6';
+  document.getElementById('statCycle').textContent = computeCurrentDay(challengeMeta.startDate) + '/30';
 
   const hist = document.getElementById('historyList');
   hist.innerHTML = '';
-  const sorted = loggedSessions.sort((a,b)=> a.date < b.date ? 1 : -1).slice(0,14);
+  const sorted = loggedSessions.sort((a,b)=> a.date < b.date ? 1 : -1).slice(0,20);
   if(sorted.length===0){
     hist.innerHTML = '<div class="empty">No sessions logged yet. Check off a set on the Train tab to get started.</div>';
   } else {
@@ -551,7 +654,7 @@ function renderProgress(){
       row.className = 'ex-card';
       row.style.padding = '12px 16px';
       row.innerHTML = `<div class="ex-top">
-        <div><div class="ex-name" style="font-size:14px;">${day.title}</div>
+        <div><div class="ex-name" style="font-size:14px;">Day ${entry.dayId} — ${day.title}</div>
         <div class="ex-note" style="margin-top:2px;">${entry.date}</div></div>
         <div class="ex-target">${doneSets}/${totalSets} sets</div>
       </div>`;
@@ -560,11 +663,23 @@ function renderProgress(){
   }
 }
 
+async function restartChallenge(){
+  if(confirm('Restart the 30-day challenge? Today becomes Day 1 again. Your history and skill progress stay saved.')){
+    challengeMeta = { startDate: todayKey() };
+    await cloudSave('meta', challengeMeta);
+    currentDay = 1;
+    renderTrain();
+    renderProgress();
+  }
+}
+
 async function resetAll(){
   if(confirm('Clear all logged sessions and skill progress for "'+username+'"? This cannot be undone.')){
-    log = {}; skillState = {};
+    log = {}; skillState = {}; challengeMeta = { startDate: todayKey() };
     await cloudSave('log', log);
     await cloudSave('skills', skillState);
+    await cloudSave('meta', challengeMeta);
+    currentDay = 1;
     renderTrain(); renderSkills(); renderProgress();
   }
 }
