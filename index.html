@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IRON RIG — 30-Day Challenge</title>
+<title>IRON RIG — Your Personalized Training Plan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -29,21 +29,41 @@
 
   main{max-width:640px; margin:0 auto; padding:0 20px;}
 
-  .login-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
-  .login-card{max-width:380px; width:100%;}
-  .login-card .mark{color:var(--red); font-size:14px; font-family:'JetBrains Mono',monospace;}
-  .login-card h1{font-size:34px; margin:6px 0 10px;}
-  .login-card p{color:var(--chalk-dim); font-size:14px; line-height:1.5; margin-bottom:22px;}
-  .login-input{width:100%; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; color:var(--chalk); font-size:16px; font-family:'Inter',sans-serif; margin-bottom:12px;}
-  .login-input:focus{outline:none; border-color:var(--red);}
+  /* Login */
+  .center-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .center-card{max-width:420px; width:100%;}
+  .center-card .mark{color:var(--red); font-size:14px; font-family:'JetBrains Mono',monospace;}
+  .center-card h1{font-size:32px; margin:6px 0 10px; line-height:1.1;}
+  .center-card p{color:var(--chalk-dim); font-size:14px; line-height:1.55; margin-bottom:22px;}
+  .field-input{width:100%; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; color:var(--chalk); font-size:16px; font-family:'Inter',sans-serif; margin-bottom:12px;}
+  .field-input:focus{outline:none; border-color:var(--red);}
   .btn-primary{width:100%; background:var(--red); color:#1a0a08; border:none; border-radius:12px; padding:14px 16px; font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:0.03em; text-transform:uppercase; font-weight:600; cursor:pointer;}
   .btn-primary:disabled{opacity:0.5; cursor:default;}
-  .login-note{font-size:12px; color:var(--steel); margin-top:14px; line-height:1.5;}
-  .login-error{color:var(--red); font-size:13px; margin-bottom:10px; display:none;}
+  .btn-ghost{width:100%; background:transparent; color:var(--chalk-dim); border:1px solid var(--line); border-radius:12px; padding:12px 16px; font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.03em; text-transform:uppercase; cursor:pointer; margin-top:10px;}
+  .field-note{font-size:12px; color:var(--steel); margin-top:14px; line-height:1.5;}
+  .field-error{color:var(--red); font-size:13px; margin-bottom:10px; display:none;}
 
-  .rail{display:flex; gap:8px; overflow-x:auto; padding:10px 0 20px; scrollbar-width:none; align-items:center;}
+  /* Quiz */
+  .quiz-progress{display:flex; gap:6px; margin-bottom:22px;}
+  .quiz-dot{height:4px; flex:1; border-radius:4px; background:var(--line);}
+  .quiz-dot.done{background:var(--red);}
+  .quiz-back{color:var(--steel); font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer; margin-bottom:14px; display:inline-block;}
+  .quiz-eyebrow{color:var(--red); font-size:12px; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; margin-bottom:8px;}
+  .quiz-option{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:10px; cursor:pointer; transition:all .12s ease;}
+  .quiz-option:hover{border-color:var(--steel);}
+  .quiz-option .opt-label{font-family:'Oswald',sans-serif; font-size:16px; letter-spacing:0.02em;}
+  .quiz-option .opt-sub{color:var(--chalk-dim); font-size:13px; margin-top:3px; line-height:1.4;}
+  .quiz-option.selected{border-color:var(--red); background:rgba(255,77,61,0.08);}
+
+  .plan-summary{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin:16px 0;}
+  .plan-summary .row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .plan-summary .row:last-child{border-bottom:none;}
+  .plan-summary .row span:first-child{color:var(--chalk-dim);}
+  .plan-summary .row span:last-child{font-family:'JetBrains Mono',monospace; color:var(--amber);}
+  .why-box{background:var(--bg-raised); border-left:3px solid var(--red); border-radius:8px; padding:12px 14px; font-size:13px; color:var(--chalk-dim); line-height:1.55; margin-top:14px;}
+
+  .rail{display:flex; gap:8px; overflow-x:auto; padding:10px 0 20px; scrollbar-width:none;}
   .rail::-webkit-scrollbar{display:none;}
-  .week-label{flex:0 0 auto; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--steel); padding:0 4px 0 2px; letter-spacing:0.05em;}
   .day-chip{flex:0 0 auto; padding:10px 14px; border-radius:10px; background:var(--card); border:1px solid var(--line); font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.03em; text-transform:uppercase; color:var(--chalk-dim); cursor:pointer; white-space:nowrap; transition:all .15s ease;}
   .day-chip .sub{display:block; font-size:10px; color:var(--steel); margin-top:2px; font-family:'Inter',sans-serif; text-transform:none; letter-spacing:0;}
   .day-chip.active{background:var(--red); border-color:var(--red); color:#1a0a08;}
@@ -56,8 +76,6 @@
   .session-head .eyebrow{color:var(--red); font-size:12px; font-family:'JetBrains Mono',monospace; letter-spacing:0.08em;}
   .session-head h2{font-size:30px; margin:4px 0 6px;}
   .session-head p{color:var(--chalk-dim); font-size:14px; line-height:1.5;}
-  .week-note{margin-top:12px; background:var(--card); border:1px solid var(--red-dim); border-left:3px solid var(--red); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--chalk-dim); line-height:1.5;}
-  .week-note b{color:var(--amber);}
 
   .ex-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 16px 14px; margin-bottom:12px;}
   .ex-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
@@ -98,7 +116,7 @@
   .view{display:none;}
   .view.active{display:block;}
   .empty{color:var(--steel); font-size:13px; padding:20px 0; text-align:center;}
-  .save-pill{position:fixed; top:14px; right:14px; background:var(--card); border:1px solid var(--line); padding:6px 12px; border-radius:100px; font-size:11px; color:var(--chalk-dim); font-family:'JetBrains Mono',monospace; opacity:0; transition:opacity .3s ease; z-index:40;}
+  .save-pill{position:fixed; top:14px; right:14px; background:var(--card); border:1px solid var(--line); padding:6px 12px; border-radius:100px; font-size:11px; color:var(--chalk-dim); font-family:'JetBrains Mono',monospace; opacity:0; transition:opacity .3s ease; z-index:40; max-width:70vw;}
   .save-pill.show{opacity:1;}
 
   ::selection{background:var(--red); color:#fff;}
@@ -109,18 +127,25 @@
 
 <div class="save-pill" id="savePill">Saved to cloud</div>
 
-<div class="login-wrap" id="loginScreen">
-  <div class="login-card">
+<!-- LOGIN -->
+<div class="center-wrap" id="loginScreen">
+  <div class="center-card">
     <div class="mark">/ IRON RIG</div>
     <h1>Who's training?</h1>
-    <p>Pick a username. No password — enter the same name next time, on any device, and your 30-day challenge picks up right where you left it.</p>
-    <div class="login-error" id="loginError">Letters, numbers, and underscores only, 2-24 characters.</div>
-    <input class="login-input" id="usernameInput" placeholder="e.g. kwame_23" autocomplete="off" maxlength="24">
+    <p>Pick a username. No password — enter the same name next time, on any device, and your plan and history pick up right where you left off.</p>
+    <div class="field-error" id="loginError">Letters, numbers, and underscores only, 2-24 characters.</div>
+    <input class="field-input" id="usernameInput" placeholder="e.g. kwame_23" autocomplete="off" maxlength="24">
     <button class="btn-primary" id="loginBtn" onclick="handleLogin()">Continue</button>
-    <p class="login-note">Your workouts and weights are stored under this username in the cloud. Anyone who knows your exact username and has this app's link could technically look up the same data — don't use anything private as your username, and don't share it publicly.</p>
+    <p class="field-note">Your workouts, weights, and answers are stored under this username in the cloud. Anyone who knows your exact username and has this app's link could technically look up the same data — don't use anything private as your username, and don't share it publicly.</p>
   </div>
 </div>
 
+<!-- QUIZ -->
+<div class="center-wrap" id="quizScreen" style="display:none;">
+  <div class="center-card" id="quizCard" style="max-width:460px;"></div>
+</div>
+
+<!-- APP -->
 <div id="appRoot" style="display:none;">
   <header>
     <div class="brand"><span class="mark">/</span><h1>IRON RIG</h1></div>
@@ -134,10 +159,9 @@
     <section id="view-train" class="view active">
       <div class="rail" id="dayRail"></div>
       <div class="session-head">
-        <div class="eyebrow" id="sessionEyebrow">DAY 1 OF 30 · WEEK 1</div>
-        <h2 id="sessionTitle">Push — Strength</h2>
+        <div class="eyebrow" id="sessionEyebrow"></div>
+        <h2 id="sessionTitle"></h2>
         <p id="sessionDesc"></p>
-        <div class="week-note" id="weekNote"></div>
       </div>
       <div id="exerciseList"></div>
       <div id="finisherBlock"></div>
@@ -147,7 +171,7 @@
       <div class="session-head">
         <div class="eyebrow">PROGRESSIONS</div>
         <h2>Skill Ladder</h2>
-        <p>Tick off each milestone as you can hold or perform it cleanly for the target.</p>
+        <p>Bonus track — bodyweight skills you can work on any day, regardless of your main split. Tick off each milestone as you can hold or perform it cleanly.</p>
       </div>
       <div id="skillsList"></div>
     </section>
@@ -160,21 +184,21 @@
       <div class="grid2">
         <div class="stat"><div class="num" id="statStreak">0</div><div class="label">Current streak</div></div>
         <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Sessions logged</div></div>
-        <div class="stat"><div class="num" id="statCycle">1/30</div><div class="label">Challenge day</div></div>
+        <div class="stat"><div class="num" id="statCycle">1/7</div><div class="label">Week position</div></div>
         <div class="stat"><div class="num" id="statBest">0</div><div class="label">Best streak</div></div>
       </div>
       <div class="block-label">History</div>
       <div id="historyList"></div>
-      <div class="block-label">Challenge</div>
+      <div class="block-label">Your Plan</div>
       <div class="ex-card">
-        <p class="ex-note">The 30-day cycle auto-restarts on Day 31 — you don't need to do anything. If you want to jump back to Day 1 early (e.g. you took a long break), use this.</p>
+        <p class="ex-note" id="planSummaryText"></p>
         <div style="margin-top:12px;">
-          <span class="day-chip" onclick="restartChallenge()">Restart challenge from Day 1</span>
+          <span class="day-chip" onclick="editProgram()">Edit my plan (goal, equipment, days)</span>
         </div>
       </div>
       <div class="block-label">Reset</div>
       <div class="ex-card">
-        <p class="ex-note">This clears all logged sessions and skill progress for this username in the cloud. Can't be undone.</p>
+        <p class="ex-note">This clears all logged sessions, skill progress, and your quiz answers for this username in the cloud. Can't be undone.</p>
         <div style="margin-top:12px;">
           <span class="day-chip" style="color:var(--red); border-color:var(--red-dim);" onclick="resetAll()">Clear all data</span>
         </div>
@@ -195,123 +219,193 @@
    ====================================================================== */
 const SUPABASE_URL = 'https://pmwknobatlhuaddkuhee.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtd2tub2JhdGxodWFkZGt1aGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNzkzNDQsImV4cCI6MjEwMDc1NTM0NH0.rvYoMaSygaGpoEKLTnc3UZkHzoDd1ukd1N6N9aGYzTo';
+const sb = (SUPABASE_URL.startsWith('http')) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-const sb = (SUPABASE_URL.startsWith('http'))
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+/* ======================================================================
+   EXERCISE DATABASE
+   minTier: 'bw' (no equipment) | 'home' (dumbbells/bands/pull-up bar) | 'gym' (full gym)
+   A user's tier unlocks everything at or below it (gym unlocks home + bw too).
+   ====================================================================== */
+const TIER_RANK = { bw:0, home:1, gym:2 };
 
-/* ============ WEEKLY TEMPLATE (repeats 4x, plus a 2-day finale = 30 days) ============ */
-const WEEK_TEMPLATE = [
-  { tag:"Push", title:"Push — Strength", sub:"Heavy",
-    desc:"Chest, shoulders, triceps. Low reps, real loads.",
-    exercises:[
-      {name:"Barbell or DB Bench Press", target:"4×6-8", note:"Add weight when you hit 8 clean reps on all 4 sets.", sets:4},
-      {name:"Incline DB Press", target:"3×8-10", note:"30-45° incline. Controlled, no bounce.", sets:3},
-      {name:"Bench Dips (feet elevated)", target:"3×AMRAP", note:"Your dip substitute — feet on a bench or box to load it properly.", sets:3},
-      {name:"Pike Push-ups", target:"3×8-12", note:"Feet elevated. Handstand push-up feeder.", sets:3},
-      {name:"Cable Chest Fly", target:"3×12-15", note:"Slow eccentric, squeeze at the center.", sets:3},
-      {name:"Hollow Body Hold", target:"3×30-40s", note:"Core finisher — lower back stays glued to the floor.", sets:3}
-    ]},
-  { tag:"Pull", title:"Pull — Strength", sub:"Heavy",
-    desc:"Back and biceps, built around the cable stack since there's no bar.",
-    exercises:[
-      {name:"Wide-Grip Lat Pulldown", target:"4×6-8", note:"Your main pull-up substitute — go heavy.", sets:4},
-      {name:"Seated Cable Row", target:"3×8-10", note:"Chest up, drive elbows back, no torso swing.", sets:3},
-      {name:"Single-Arm Cable Row", target:"3×10 each", note:"Full stretch at the front, squeeze the shoulder blade.", sets:3},
-      {name:"Face Pulls", target:"3×15", note:"Non-negotiable for shoulder health.", sets:3},
-      {name:"Cable or DB Bicep Curl", target:"3×12", note:"Strict, no swinging.", sets:3},
-      {name:"Straight-Arm Pulldown", target:"3×12-15", note:"Lat isolation, arms stay straight throughout.", sets:3}
-    ]},
-  { tag:"Legs", title:"Legs", sub:"Heavy",
-    desc:"Full lower body — keeps your hips and core stable for skill work.",
-    exercises:[
-      {name:"Barbell Back Squat (or Goblet Squat)", target:"4×6-10", note:"Use whichever your gym setup makes safest.", sets:4},
-      {name:"Bulgarian Split Squat", target:"3×10 each", note:"Rear foot elevated on a bench.", sets:3},
-      {name:"Romanian Deadlift", target:"3×8", note:"Hinge at the hip, slight knee bend.", sets:3},
-      {name:"Leg Curl Machine", target:"3×10-12", note:"Or Nordic curl negatives if no machine.", sets:3},
-      {name:"Standing Calf Raise", target:"3×15", note:"Full range, pause at the top.", sets:3},
-      {name:"Pistol Squat Progression", target:"3×5 each", note:"Box-assisted if needed.", sets:3}
-    ]},
-  { tag:"Skills", title:"Skills + Conditioning", sub:"Fat loss",
-    desc:"Static holds for control and visible tension, then a short conditioning finisher.",
-    exercises:[
-      {name:"Wall Handstand Hold", target:"5×30-45s", note:"Focus on a hollow body line.", sets:5},
-      {name:"L-Sit (or Tuck Sit)", target:"5×10-20s", note:"Tuck one or both knees if full L-sit isn't there yet.", sets:5},
-      {name:"Tuck Front Lever Hold", target:"4×10-15s", note:"On the lat pulldown bar or rings.", sets:4},
-      {name:"Hollow Body Rocks", target:"3×15", note:"Dynamic version, keeps the core honest.", sets:3}
-    ],
-    finisher:{ title:"Conditioning finisher — EMOM 12", note:"Every minute for 12 min, alternate: Minute A — 12 burpees. Minute B — 20 mountain climbers + 10 jump squats." }},
-  { tag:"Push", title:"Push — Hypertrophy", sub:"Volume",
-    desc:"Same muscles as your strength day, higher reps and shorter rest — the volume that builds visible size.",
-    exercises:[
-      {name:"DB Shoulder Press", target:"4×10-12", note:"Seated or standing, controlled tempo.", sets:4},
-      {name:"Push-ups (weighted or deficit)", target:"4×AMRAP", note:"Plate on back or hands on blocks.", sets:4},
-      {name:"Cable Fly (low-to-high)", target:"3×15", note:"Targets upper chest.", sets:3},
-      {name:"Diamond Push-ups", target:"3×AMRAP", note:"Triceps-focused.", sets:3},
-      {name:"Cable Lateral Raise", target:"3×15 each arm", note:"Keep it light and strict.", sets:3}
-    ]},
-  { tag:"Pull", title:"Pull — Hypertrophy", sub:"Volume",
-    desc:"Higher-rep back and arm work — keep rest short (60-75s).",
-    exercises:[
-      {name:"Close-Grip Lat Pulldown", target:"4×10-12", note:"Different grip to your strength day.", sets:4},
-      {name:"Wide-Grip Cable Row", target:"3×12", note:"Elbows high and wide.", sets:3},
-      {name:"Straight-Arm Pulldown", target:"3×12", note:"Slow and controlled.", sets:3},
-      {name:"Hammer Curl", target:"3×12", note:"DB or cable rope attachment.", sets:3},
-      {name:"Rear Delt Cable Fly", target:"3×15", note:"Keeps shoulders balanced.", sets:3},
-      {name:"Hanging or Lying Leg Raise", target:"3×15", note:"Use the cable pulldown bar or floor.", sets:3}
-    ]},
-  { tag:"Rest", title:"Rest & Mobility", sub:"Recovery",
-    desc:"The one day you shouldn't skip skipping — this is where the muscle actually shows up.",
-    exercises:[
-      {name:"Shoulder & Thoracic Mobility", target:"10 min", note:"Band pull-aparts, cat-cow, wall slides.", sets:1},
-      {name:"Hip Flexor & Hamstring Stretch", target:"10 min", note:"Couch stretch, seated forward fold.", sets:1},
-      {name:"Easy Walk or Light Cardio", target:"20-30 min", note:"Conversational pace.", sets:1}
-    ]}
+const PUSH = [
+  {name:"Push-Up", minTier:'bw', compound:true},
+  {name:"Dip (bench or chair)", minTier:'bw', compound:true},
+  {name:"Pike Push-Up", minTier:'bw', compound:false},
+  {name:"Diamond Push-Up", minTier:'bw', compound:false},
+  {name:"Archer Push-Up", minTier:'bw', compound:false},
+  {name:"DB Bench Press", minTier:'home', compound:true},
+  {name:"DB Shoulder Press", minTier:'home', compound:true},
+  {name:"DB Floor Press", minTier:'home', compound:true},
+  {name:"Incline DB Press", minTier:'home', compound:false},
+  {name:"Lateral Raise (DB)", minTier:'home', compound:false},
+  {name:"Resistance Band Chest Press", minTier:'home', compound:false},
+  {name:"Barbell Bench Press", minTier:'gym', compound:true},
+  {name:"Barbell Overhead Press", minTier:'gym', compound:true},
+  {name:"Machine Chest Press", minTier:'gym', compound:true},
+  {name:"Cable Chest Fly", minTier:'gym', compound:false},
+  {name:"Cable Tricep Pushdown", minTier:'gym', compound:false},
+  {name:"Cable Lateral Raise", minTier:'gym', compound:false}
 ];
 
-const WEEK_NOTES = {
-  1: "Week 1 — Baseline. Log your starting weight and reps honestly on every exercise. This is the number you're chasing by Day 30.",
-  2: "Week 2 — Build. Hit every rep clean last week? Add 2.5–5kg or 1–2 reps per exercise this week.",
-  3: "Week 3 — Push. You should be lifting more, or doing more reps, than Week 1 on almost everything by now.",
-  4: "Week 4 — Grind. This is the hardest week for most people. Hold your numbers steady if you need to — just don't go backwards.",
-  5: "Final stretch — Days 29–30. Give it everything and try to beat your Day 1–2 numbers before the challenge loops back to Day 1."
+const PULL = [
+  {name:"Inverted Row (table or low bar)", minTier:'bw', compound:true},
+  {name:"Doorway Towel Row", minTier:'bw', compound:false},
+  {name:"Superman Row", minTier:'bw', compound:false},
+  {name:"Pull-Up / Chin-Up", minTier:'home', compound:true},
+  {name:"Resistance Band Row", minTier:'home', compound:true},
+  {name:"Single-Arm DB Row", minTier:'home', compound:true},
+  {name:"DB Bicep Curl", minTier:'home', compound:false},
+  {name:"Band Face Pull", minTier:'home', compound:false},
+  {name:"Band Pull-Apart", minTier:'home', compound:false},
+  {name:"Lat Pulldown", minTier:'gym', compound:true},
+  {name:"Seated Cable Row", minTier:'gym', compound:true},
+  {name:"Bent-Over Barbell Row", minTier:'gym', compound:true},
+  {name:"Cable Face Pull", minTier:'gym', compound:false},
+  {name:"Straight-Arm Pulldown", minTier:'gym', compound:false},
+  {name:"Barbell or Cable Curl", minTier:'gym', compound:false}
+];
+
+const LEGS = [
+  {name:"Bodyweight Squat", minTier:'bw', compound:true},
+  {name:"Jump Squat", minTier:'bw', compound:false},
+  {name:"Walking Lunge", minTier:'bw', compound:true},
+  {name:"Bulgarian Split Squat", minTier:'bw', compound:true},
+  {name:"Single-Leg RDL", minTier:'bw', compound:false},
+  {name:"Glute Bridge", minTier:'bw', compound:false},
+  {name:"Calf Raise", minTier:'bw', compound:false},
+  {name:"Wall Sit", minTier:'bw', compound:false},
+  {name:"Pistol Squat Progression", minTier:'bw', compound:false},
+  {name:"Goblet Squat (DB)", minTier:'home', compound:true},
+  {name:"DB Romanian Deadlift", minTier:'home', compound:true},
+  {name:"DB Bulgarian Split Squat", minTier:'home', compound:true},
+  {name:"DB Walking Lunge", minTier:'home', compound:false},
+  {name:"DB Hip Thrust", minTier:'home', compound:false},
+  {name:"Barbell Back Squat", minTier:'gym', compound:true},
+  {name:"Barbell Romanian Deadlift", minTier:'gym', compound:true},
+  {name:"Leg Press", minTier:'gym', compound:true},
+  {name:"Barbell Hip Thrust", minTier:'gym', compound:true},
+  {name:"Leg Curl Machine", minTier:'gym', compound:false},
+  {name:"Leg Extension Machine", minTier:'gym', compound:false}
+];
+
+const CORE = [
+  {name:"Hollow Body Hold", minTier:'bw'},
+  {name:"Plank", minTier:'bw'},
+  {name:"Mountain Climbers", minTier:'bw'},
+  {name:"Burpees", minTier:'bw'},
+  {name:"Bicycle Crunch", minTier:'bw'},
+  {name:"High Knees", minTier:'bw'},
+  {name:"Hanging Knee Raise", minTier:'home'},
+  {name:"Cable Woodchop", minTier:'gym'}
+];
+
+/* ======================================================================
+   PROGRAM GENERATOR
+   ====================================================================== */
+const SPLIT_TEMPLATES = {
+  3: ['push','rest','pull','rest','legs','rest','rest'],
+  4: ['upper','lower','rest','upper','lower','rest','rest'],
+  5: ['push','pull','legs','upper','lower','rest','rest'],
+  6: ['push','pull','legs','push','pull','legs','mobility']
 };
 
-function buildProgram(){
-  const arr = [];
-  for(let i=0; i<30; i++){
-    const week = Math.floor(i/7) + 1;
-    const t = WEEK_TEMPLATE[i % 7];
-    arr.push({
-      id: i+1,
-      week: week,
-      tag: `Day ${i+1} / ${t.tag}`,
-      title: t.title,
-      sub: t.sub,
-      desc: t.desc,
-      weekNote: WEEK_NOTES[week],
-      exercises: t.exercises,
-      finisher: t.finisher
-    });
-  }
-  return arr;
+const SPLIT_RATIONALE = {
+  3: "3 days/week: one full pass through Push/Pull/Legs. Research shows training a muscle twice a week edges out once a week — at 3 days you can still make great progress by pushing intensity and full range of motion each set.",
+  4: "4 days/week: Upper/Lower, repeated twice. This hits every muscle group twice in the week, which the evidence consistently favors for muscle growth over once-weekly splits.",
+  5: "5 days/week: Push, Pull, Legs, then Upper, Lower. Every muscle group gets trained twice — once in its PPL day, once in its Upper/Lower day.",
+  6: "6 days/week: Push/Pull/Legs, twice through. The classic high-frequency setup — every muscle group trained twice weekly, which the research backs as one of the more effective frequencies for hypertrophy."
+};
+
+const GOAL_PARAMS = {
+  muscle:   { compoundSets:4, compoundReps:'6-10',  accessorySets:3, accessoryReps:'10-15', rest:'60-90 sec',   finisher:false, label:'Build Muscle' },
+  strength: { compoundSets:5, compoundReps:'4-6',   accessorySets:3, accessoryReps:'8-10',  rest:'2-3 min',     finisher:false, label:'Get Stronger' },
+  fatloss:  { compoundSets:3, compoundReps:'10-15', accessorySets:3, accessoryReps:'12-20', rest:'30-45 sec',   finisher:true,  label:'Lose Fat' },
+  general:  { compoundSets:3, compoundReps:'8-12',  accessorySets:3, accessoryReps:'10-15', rest:'60-90 sec',   finisher:false, label:'General Fitness' }
+};
+
+const EXPERIENCE_COUNT = { beginner:4, intermediate:5, advanced:6 };
+const EXPERIENCE_LABEL = { beginner:'Beginner', intermediate:'Intermediate', advanced:'Advanced' };
+const EQUIPMENT_LABEL = { bw:'Home — bodyweight only', home:'Home — dumbbells / bands / bar', gym:'Full gym' };
+
+function pickFrom(db, tier, count){
+  const allowed = db.filter(e => TIER_RANK[e.minTier] <= TIER_RANK[tier]);
+  const sorted = allowed.slice().sort((a,b)=>
+    (TIER_RANK[b.minTier] - TIER_RANK[a.minTier]) || ((b.compound?1:0) - (a.compound?1:0))
+  );
+  return sorted.slice(0, count);
 }
-const PROGRAM = buildProgram();
+
+function toLogged(picks, goalParams){
+  return picks.map(e => ({
+    name: e.name,
+    target: e.compound ? `${goalParams.compoundSets}×${goalParams.compoundReps}` : `${goalParams.accessorySets}×${goalParams.accessoryReps}`,
+    note: e.compound ? `Main lift — rest ${goalParams.rest}, push intensity and track your numbers.` : `Accessory — rest ${goalParams.rest}, controlled tempo, full range of motion.`
+  }));
+}
+
+function buildSession(type, profile){
+  const tier = profile.equipment;
+  const gp = GOAL_PARAMS[profile.goal];
+  const n = EXPERIENCE_COUNT[profile.experience];
+  let exercises = [], title, desc, finisher = null;
+
+  if(type==='push'){
+    exercises = toLogged(pickFrom(PUSH, tier, n), gp);
+    title = 'Push'; desc = 'Chest, shoulders, triceps.';
+  } else if(type==='pull'){
+    exercises = toLogged(pickFrom(PULL, tier, n), gp);
+    title = 'Pull'; desc = 'Back and biceps.';
+  } else if(type==='legs'){
+    exercises = toLogged(pickFrom(LEGS, tier, n+1), gp);
+    title = 'Legs'; desc = 'Full lower body.';
+  } else if(type==='upper'){
+    const half = Math.ceil(n/2);
+    exercises = [...toLogged(pickFrom(PUSH, tier, half), gp), ...toLogged(pickFrom(PULL, tier, n-half), gp)];
+    title = 'Upper Body'; desc = 'Push and pull combined — chest, back, shoulders, arms.';
+  } else if(type==='lower'){
+    exercises = toLogged(pickFrom(LEGS, tier, n+2), gp);
+    title = 'Lower Body'; desc = 'Your only leg day this split — extra volume to make up for it.';
+  } else if(type==='mobility'){
+    exercises = [
+      {name:'Mobility Flow', target:'10 min', note:'Shoulders, hips, spine — dynamic movement, not static stretching.'},
+      {name:'Easy Walk or Light Cardio', target:'20-30 min', note:'Conversational pace. This is recovery, not a workout.'}
+    ];
+    title = 'Active Recovery'; desc = "You're training almost daily, so this day is deliberately light — recovery is part of the program, not a day off from it.";
+  } else {
+    exercises = [{name:'Full Rest', target:'—', note:'No training today. Sleep, eat, hydrate — this is when the adaptation from your other sessions actually happens.'}];
+    title = 'Rest Day'; desc = 'Full recovery.';
+  }
+
+  if(gp.finisher && ['push','pull','legs','upper','lower'].includes(type)){
+    const fin = pickFrom(CORE, tier, 2);
+    if(fin.length){
+      finisher = { title:'Conditioning finisher', note: fin.map(f=>f.name).join(' + ') + ' — 3 rounds, 30-45 sec each, minimal rest between exercises.' };
+    }
+  }
+
+  return { type, title, desc, exercises, finisher };
+}
+
+function buildProgram(profile){
+  const template = SPLIT_TEMPLATES[profile.days] || SPLIT_TEMPLATES[3];
+  return template.map((type, i) => ({ id: i+1, tag:`Day ${i+1}`, ...buildSession(type, profile) }));
+}
 
 const SKILLS = [
-  {id:"muscleup", name:"Muscle-Up", steps:["Wide-grip pulldown at full bodyweight equivalent, 4×6","Explosive high pulldowns — bar to sternum, fast","Straight bar dips or bench dips ×15 clean","Negative muscle-up on rings/bar (3-4s lower) ×3","First full muscle-up"]},
+  {id:"muscleup", name:"Muscle-Up", steps:["Wide-grip pulldown/pull-up at full bodyweight, 4×6","Explosive high pull — bar to sternum, fast","Straight bar dips or bench dips ×15 clean","Negative muscle-up (3-4s lower) ×3","First full muscle-up"]},
   {id:"hspu", name:"Handstand Push-up", steps:["Freestanding handstand hold, 30s+","Wall handstand hold, 60s","Pike push-up, feet fully elevated, 3×8","Wall HSPU with head touching floor, 3×3","First freestanding HSPU"]},
   {id:"frontlever", name:"Front Lever", steps:["Tuck front lever hold, 20s","Advanced tuck (hips open, knees bent), 15s","Straddle front lever, 10s","Half-lay front lever, 8s","Full front lever, 5s"]},
   {id:"planche", name:"Planche", steps:["Planche lean (straight arms, weight forward), 30s","Frog / tuck planche hold, 15s","Advanced tuck planche, 10s","Straddle planche, 5s","Full planche, 3s"]},
   {id:"pistol", name:"Pistol Squat", steps:["Box-assisted pistol (sit to box), 3×8 each leg","Pistol with hand assist (holding a post), 3×6 each","Slow negative pistol, no assist, 3×5 each","Full unassisted pistol, 3×3 each","Weighted pistol squat"]}
 ];
 
-/* ============ DATE HELPERS (local time, not UTC — avoids day-rollover glitches) ============ */
+/* ======================================================================
+   DATE HELPERS (local time, not UTC — avoids day-rollover glitches)
+   ====================================================================== */
 function localDateStr(d){
   d = d || new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
 const todayKey = () => localDateStr();
@@ -319,14 +413,12 @@ const todayKey = () => localDateStr();
 function daysBetween(dateStrA, dateStrB){
   const [ay,am,ad] = dateStrA.split('-').map(Number);
   const [by,bm,bd] = dateStrB.split('-').map(Number);
-  const a = Date.UTC(ay, am-1, ad);
-  const b = Date.UTC(by, bm-1, bd);
-  return Math.round((b-a) / 86400000);
+  return Math.round((Date.UTC(by,bm-1,bd) - Date.UTC(ay,am-1,ad)) / 86400000);
 }
 
-function computeCurrentDay(startDate){
+function computeCurrentDay(startDate, cycleLen){
   const diff = daysBetween(startDate, todayKey());
-  const idx = ((diff % 30) + 30) % 30; // safe modulo, handles any drift
+  const idx = ((diff % cycleLen) + cycleLen) % cycleLen;
   return idx + 1;
 }
 
@@ -334,13 +426,15 @@ function computeCurrentDay(startDate){
 const USERNAME_KEY = "ironrig_username_v1";
 
 let username = null;
+let profile = null;        // { goal, experience, equipment, days }
+let PROGRAM = [];           // generated from profile
 let log = {};
 let skillState = {};
-let challengeMeta = null; // { startDate: 'YYYY-MM-DD' }
+let challengeMeta = null;   // { startDate: 'YYYY-MM-DD' }
 let currentDay = 1;
 let saveTimer = null;
 
-/* ============ CLOUD STORAGE (Supabase) ============ */
+/* ============ CLOUD STORAGE ============ */
 async function cloudLoad(key){
   if(!sb) return null;
   const { data, error } = await sb.from('app_data').select('data_value').eq('username', username).eq('data_key', key).maybeSingle();
@@ -358,17 +452,14 @@ async function cloudSave(key, value){
 }
 function flashSaved(){
   const pill = document.getElementById('savePill');
-  pill.className = 'save-pill show';
-  pill.textContent = 'Saved to cloud';
+  pill.className = 'save-pill show'; pill.textContent = 'Saved to cloud';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=> pill.classList.remove('show'), 1200);
 }
 function showCloudError(msg){
   const pill = document.getElementById('savePill');
   pill.className = 'save-pill show';
-  pill.style.background = '#3a1410';
-  pill.style.borderColor = 'var(--red)';
-  pill.style.color = 'var(--red)';
+  pill.style.background = '#3a1410'; pill.style.borderColor = 'var(--red)'; pill.style.color = 'var(--red)';
   pill.textContent = msg;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=> { pill.classList.remove('show'); pill.style.background=''; pill.style.borderColor=''; pill.style.color=''; }, 6000);
@@ -379,10 +470,7 @@ function handleLogin(){
   const input = document.getElementById('usernameInput');
   const val = input.value.trim();
   const errEl = document.getElementById('loginError');
-  if(!/^[a-zA-Z0-9_]{2,24}$/.test(val)){
-    errEl.style.display = 'block';
-    return;
-  }
+  if(!/^[a-zA-Z0-9_]{2,24}$/.test(val)){ errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
   username = val.toLowerCase();
   localStorage.setItem(USERNAME_KEY, username);
@@ -396,28 +484,32 @@ function logout(){
 }
 
 /* ============ BOOT ============ */
-async function ensureChallengeStart(){
-  let meta = await cloudLoad('meta');
-  if(!meta || !meta.startDate){
-    meta = { startDate: todayKey() };
-    await cloudSave('meta', meta);
-  }
-  return meta;
-}
-
 async function boot(){
-  if(!sb){
-    alert("Supabase isn't configured yet. Open index.html and paste your SUPABASE_URL and SUPABASE_ANON_KEY at the top of the <script> tag.");
-  }
+  if(!sb){ alert("Supabase isn't configured yet. Open index.html and paste your SUPABASE_URL and SUPABASE_ANON_KEY at the top of the <script> tag."); }
   document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appRoot').style.display = 'block';
-  document.getElementById('userChip').textContent = username + ' · logout';
 
-  const [savedLog, savedSkills, meta] = await Promise.all([ cloudLoad('log'), cloudLoad('skills'), ensureChallengeStart() ]);
+  const [savedProfile, savedLog, savedSkills] = await Promise.all([ cloudLoad('profile'), cloudLoad('log'), cloudLoad('skills') ]);
   log = savedLog || {};
   skillState = savedSkills || {};
+
+  if(!savedProfile){
+    startQuiz();
+    return;
+  }
+  profile = savedProfile;
+  await enterApp();
+}
+
+async function enterApp(){
+  PROGRAM = buildProgram(profile);
+  let meta = await cloudLoad('meta');
+  if(!meta || !meta.startDate){ meta = { startDate: todayKey() }; await cloudSave('meta', meta); }
   challengeMeta = meta;
-  currentDay = computeCurrentDay(challengeMeta.startDate);
+  currentDay = computeCurrentDay(challengeMeta.startDate, PROGRAM.length);
+
+  document.getElementById('quizScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'block';
+  document.getElementById('userChip').textContent = username + ' · logout';
 
   renderTrain();
   renderSkills();
@@ -429,40 +521,127 @@ window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('usernameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
 });
 
-/* If the app is left open across midnight, re-sync to the correct day next time it's viewed */
 document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState === 'visible' && challengeMeta){
-    const correctDay = computeCurrentDay(challengeMeta.startDate);
-    if(correctDay !== currentDay){
-      currentDay = correctDay;
-      renderTrain();
-    }
+  if(document.visibilityState === 'visible' && challengeMeta && PROGRAM.length){
+    const correctDay = computeCurrentDay(challengeMeta.startDate, PROGRAM.length);
+    if(correctDay !== currentDay){ currentDay = correctDay; renderTrain(); }
   }
 });
 
-/* ============ RENDER: TRAIN VIEW ============
-   Sessions are keyed by DATE + DAY (e.g. "2026-07-27__d2"), not just date,
-   so browsing to a different day doesn't overwrite another day's log.
-*/
-function sessionKey(dateStr, dayId){ return dateStr + '__d' + dayId; }
+/* ======================================================================
+   QUIZ
+   ====================================================================== */
+const QUIZ_STEPS = [
+  { key:'goal', title:"What's your main goal?", options:[
+    {value:'muscle', label:'Build Muscle', sub:'Moderate reps, more volume, visible size over time.'},
+    {value:'strength', label:'Get Stronger', sub:'Heavier weight, lower reps, focused on raw strength.'},
+    {value:'fatloss', label:'Lose Fat', sub:'Higher reps, shorter rest, conditioning finishers built in.'},
+    {value:'general', label:'General Fitness', sub:'A balanced, sustainable all-rounder.'}
+  ]},
+  { key:'experience', title:"What's your training experience?", options:[
+    {value:'beginner', label:'Beginner', sub:"New, or back after a long break. Fewer exercises, focus on form."},
+    {value:'intermediate', label:'Intermediate', sub:'Training consistently for a while, comfortable with the basics.'},
+    {value:'advanced', label:'Advanced', sub:'Years of training, ready for more volume and complexity.'}
+  ]},
+  { key:'equipment', title:"Where are you training?", options:[
+    {value:'bw', label:'Home — bodyweight only', sub:'No equipment at all. Floor and wall.'},
+    {value:'home', label:'Home — basic equipment', sub:'Dumbbells, resistance bands, and/or a pull-up bar.'},
+    {value:'gym', label:'Full gym', sub:'Barbells, machines, cables — the works.'}
+  ]},
+  { key:'days', title:'How many days a week can you train?', options:[
+    {value:3, label:'3 days', sub:'Push, Pull, Legs — once through the week.'},
+    {value:4, label:'4 days', sub:'Upper/Lower, repeated twice.'},
+    {value:5, label:'5 days', sub:'Push, Pull, Legs, Upper, Lower.'},
+    {value:6, label:'6 days (train almost daily)', sub:'Push/Pull/Legs, twice through, plus one active recovery day.'}
+  ]}
+];
+let quizAnswers = {};
+let quizIndex = 0;
+let quizEditing = false;
 
-function entryHasWork(entry){
-  return entry && entry.sets && Object.values(entry.sets).some(arr => arr.some(v=>v));
+function startQuiz(prefill){
+  quizAnswers = prefill ? {...prefill} : {};
+  quizIndex = 0;
+  quizEditing = !!prefill;
+  document.getElementById('quizScreen').style.display = 'flex';
+  renderQuiz();
 }
+
+function renderQuiz(){
+  const card = document.getElementById('quizCard');
+  if(quizIndex < QUIZ_STEPS.length){
+    const step = QUIZ_STEPS[quizIndex];
+    const dots = QUIZ_STEPS.map((s,i)=> `<div class="quiz-dot ${i<quizIndex ? 'done' : (i===quizIndex?'done':'')}"></div>`).join('');
+    const back = quizIndex > 0 ? `<span class="quiz-back" onclick="quizBack()">← Back</span>` : (quizEditing ? `<span class="quiz-back" onclick="cancelEditProgram()">← Cancel</span>` : '');
+    const options = step.options.map(o => {
+      const selected = quizAnswers[step.key] === o.value ? 'selected' : '';
+      return `<div class="quiz-option ${selected}" onclick='quizSelect("${step.key}", ${typeof o.value === 'string' ? `"${o.value}"` : o.value})'>
+        <div class="opt-label">${o.label}</div>
+        <div class="opt-sub">${o.sub}</div>
+      </div>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="quiz-progress">${dots}</div>
+      ${back}
+      <div class="quiz-eyebrow">STEP ${quizIndex+1} OF ${QUIZ_STEPS.length}</div>
+      <h1 style="font-size:26px;">${step.title}</h1>
+      <div style="margin-top:18px;">${options}</div>
+    `;
+  } else {
+    renderQuizSummary();
+  }
+}
+
+function quizSelect(key, value){
+  quizAnswers[key] = value;
+  setTimeout(()=>{ quizIndex++; renderQuiz(); }, 150);
+}
+function quizBack(){ quizIndex--; renderQuiz(); }
+
+function renderQuizSummary(){
+  const card = document.getElementById('quizCard');
+  const gp = GOAL_PARAMS[quizAnswers.goal];
+  const template = SPLIT_TEMPLATES[quizAnswers.days];
+  const trainDays = template.filter(t => t!=='rest').length;
+  card.innerHTML = `
+    <span class="quiz-back" onclick="quizBack()">← Back</span>
+    <div class="quiz-eyebrow">YOUR PLAN</div>
+    <h1 style="font-size:26px;">Here's what we built you</h1>
+    <div class="plan-summary">
+      <div class="row"><span>Goal</span><span>${gp.label}</span></div>
+      <div class="row"><span>Experience</span><span>${EXPERIENCE_LABEL[quizAnswers.experience]}</span></div>
+      <div class="row"><span>Equipment</span><span>${EQUIPMENT_LABEL[quizAnswers.equipment]}</span></div>
+      <div class="row"><span>Training days</span><span>${trainDays}/week</span></div>
+    </div>
+    <div class="why-box">${SPLIT_RATIONALE[quizAnswers.days]}</div>
+    <button class="btn-primary" style="margin-top:20px;" onclick="submitQuiz()">${quizEditing ? 'Save changes' : 'Start training'}</button>
+  `;
+}
+
+async function submitQuiz(){
+  profile = { goal:quizAnswers.goal, experience:quizAnswers.experience, equipment:quizAnswers.equipment, days:quizAnswers.days };
+  await cloudSave('profile', profile);
+  challengeMeta = { startDate: todayKey() };
+  await cloudSave('meta', challengeMeta);
+  await enterApp();
+}
+
+function editProgram(){ startQuiz(profile); }
+function cancelEditProgram(){ document.getElementById('quizScreen').style.display = 'none'; document.getElementById('appRoot').style.display = 'block'; }
+
+/* ======================================================================
+   RENDER: TRAIN VIEW
+   Sessions are keyed by DATE + DAY (e.g. "2026-07-27__d2"), so browsing to
+   a different day never overwrites another day's log.
+   ====================================================================== */
+function sessionKey(dateStr, dayId){ return dateStr + '__d' + dayId; }
+function entryHasWork(entry){ return entry && entry.sets && Object.values(entry.sets).some(arr => arr.some(v=>v)); }
 
 function renderRail(){
   const rail = document.getElementById('dayRail');
   rail.innerHTML = '';
-  const todaysAutoDay = computeCurrentDay(challengeMeta.startDate);
-  let lastWeek = 0;
+  const todaysAutoDay = computeCurrentDay(challengeMeta.startDate, PROGRAM.length);
   PROGRAM.forEach(d=>{
-    if(d.week !== lastWeek){
-      const label = document.createElement('div');
-      label.className = 'week-label';
-      label.textContent = 'W' + d.week;
-      rail.appendChild(label);
-      lastWeek = d.week;
-    }
     const chip = document.createElement('div');
     const doneToday = entryHasWork(log[sessionKey(todayKey(), d.id)]);
     let cls = 'day-chip';
@@ -470,11 +649,10 @@ function renderRail(){
     if(doneToday) cls += ' done';
     if(d.id===todaysAutoDay && d.id!==currentDay) cls += ' today';
     chip.className = cls;
-    chip.innerHTML = `Day ${d.id}<span class="sub">${d.title.split(' — ')[0]}</span>`;
+    chip.innerHTML = `Day ${d.id}<span class="sub">${d.title}</span>`;
     chip.onclick = () => { currentDay = d.id; renderTrain(); };
     rail.appendChild(chip);
   });
-  // auto-scroll the rail so today's chip is in view
   requestAnimationFrame(()=>{
     const active = rail.querySelector('.day-chip.active');
     if(active) active.scrollIntoView({ inline:'center', block:'nearest' });
@@ -483,9 +661,7 @@ function renderRail(){
 
 function getTodayEntry(){
   const key = sessionKey(todayKey(), currentDay);
-  if(!log[key]){
-    log[key] = { date: todayKey(), dayId: currentDay, sets: {}, weights: {} };
-  }
+  if(!log[key]) log[key] = { date: todayKey(), dayId: currentDay, sets: {}, weights: {} };
   if(!log[key].weights) log[key].weights = {};
   return log[key];
 }
@@ -501,20 +677,20 @@ function getLastWeight(dayId, exIdx){
 function renderTrain(){
   renderRail();
   const day = PROGRAM.find(d=>d.id===currentDay);
-  document.getElementById('sessionEyebrow').textContent = `DAY ${day.id} OF 30 · WEEK ${day.week} · ${day.sub.toUpperCase()}`;
+  document.getElementById('sessionEyebrow').textContent = `DAY ${day.id} OF ${PROGRAM.length} · ${GOAL_PARAMS[profile.goal].label.toUpperCase()}`;
   document.getElementById('sessionTitle').textContent = day.title;
   document.getElementById('sessionDesc').textContent = day.desc;
-  document.getElementById('weekNote').innerHTML = day.weekNote;
 
   const entry = getTodayEntry();
   const list = document.getElementById('exerciseList');
   list.innerHTML = '';
   day.exercises.forEach((ex, i)=>{
-    if(!entry.sets[i]) entry.sets[i] = new Array(ex.sets).fill(false);
+    const setCount = ex.target && ex.target.includes('×') ? parseInt(ex.target.split('×')[0]) : 1;
+    if(!entry.sets[i]) entry.sets[i] = new Array(setCount || 1).fill(false);
     const card = document.createElement('div');
     card.className = 'ex-card';
     let boxes = '';
-    for(let s=0; s<ex.sets; s++){
+    for(let s=0; s<entry.sets[i].length; s++){
       boxes += `<div class="set-box ${entry.sets[i][s]?'checked':''}" onclick="toggleSet(${i},${s})">${entry.sets[i][s]?'✓':s+1}</div>`;
     }
     const cur = entry.weights[i] || {};
@@ -527,14 +703,8 @@ function renderTrain(){
       <div class="ex-note">${ex.note}</div>
       <div class="sets-row">${boxes}</div>
       <div class="log-row">
-        <div class="log-field">
-          <label>Weight (kg)</label>
-          <input type="number" inputmode="decimal" placeholder="0" value="${cur.weight ?? ''}" onchange="updateWeight(${i},'weight',this.value)">
-        </div>
-        <div class="log-field">
-          <label>Reps</label>
-          <input type="number" inputmode="numeric" placeholder="0" value="${cur.reps ?? ''}" onchange="updateWeight(${i},'reps',this.value)">
-        </div>
+        <div class="log-field"><label>Weight (kg)</label><input type="number" inputmode="decimal" placeholder="0" value="${cur.weight ?? ''}" onchange="updateWeight(${i},'weight',this.value)"></div>
+        <div class="log-field"><label>Reps</label><input type="number" inputmode="numeric" placeholder="0" value="${cur.reps ?? ''}" onchange="updateWeight(${i},'reps',this.value)"></div>
       </div>
       ${last ? `<div class="last-time">Last time (${last.date}): <b>${last.weight ?? '—'} kg × ${last.reps ?? '—'}</b> — beat it today.</div>` : `<div class="last-time">First time logging this one — set the baseline.</div>`}
     `;
@@ -561,22 +731,15 @@ function toggleSet(exIdx, setIdx){
   persistLog();
   renderTrain();
 }
-
 function updateWeight(exIdx, field, value){
   const entry = getTodayEntry();
   if(!entry.weights[exIdx]) entry.weights[exIdx] = {};
   entry.weights[exIdx][field] = value === '' ? null : Number(value);
   persistLog();
 }
+function persistLog(){ cloudSave('log', log); }
 
-function persistLog(){
-  cloudSave('log', log);
-}
-
-/* ============ STREAK ============
-   Fixed: a day only "breaks" the streak once it's fully skipped — not
-   simply because today hasn't been logged yet (you might still train today).
-*/
+/* ============ STREAK ============ */
 function datesWithWork(){
   const dates = new Set();
   Object.values(log).forEach(entry => { if(entryHasWork(entry)) dates.add(entry.date); });
@@ -585,9 +748,7 @@ function datesWithWork(){
 function computeStreak(){
   const dates = datesWithWork();
   let d = new Date();
-  if(!dates.has(localDateStr(d))){
-    d.setDate(d.getDate()-1); // today not logged yet — check from yesterday instead of zeroing out
-  }
+  if(!dates.has(localDateStr(d))) d.setDate(d.getDate()-1);
   let streak = 0;
   while(true){
     const key = localDateStr(d);
@@ -638,7 +799,12 @@ function renderProgress(){
   document.getElementById('statStreak').textContent = computeStreak();
   document.getElementById('statTotal').textContent = loggedSessions.length;
   document.getElementById('statBest').textContent = computeBestStreak();
-  document.getElementById('statCycle').textContent = computeCurrentDay(challengeMeta.startDate) + '/30';
+  document.getElementById('statCycle').textContent = computeCurrentDay(challengeMeta.startDate, PROGRAM.length) + '/' + PROGRAM.length;
+
+  const gp = GOAL_PARAMS[profile.goal];
+  const trainDays = SPLIT_TEMPLATES[profile.days].filter(t=>t!=='rest').length;
+  document.getElementById('planSummaryText').textContent =
+    `${gp.label} · ${EXPERIENCE_LABEL[profile.experience]} · ${EQUIPMENT_LABEL[profile.equipment]} · ${trainDays} days/week`;
 
   const hist = document.getElementById('historyList');
   hist.innerHTML = '';
@@ -648,11 +814,11 @@ function renderProgress(){
   } else {
     sorted.forEach(entry=>{
       const day = PROGRAM.find(d=>d.id===entry.dayId);
+      if(!day) return;
       const totalSets = Object.values(entry.sets).reduce((a,arr)=>a+arr.length,0);
       const doneSets = Object.values(entry.sets).reduce((a,arr)=>a+arr.filter(v=>v).length,0);
       const row = document.createElement('div');
-      row.className = 'ex-card';
-      row.style.padding = '12px 16px';
+      row.className = 'ex-card'; row.style.padding = '12px 16px';
       row.innerHTML = `<div class="ex-top">
         <div><div class="ex-name" style="font-size:14px;">Day ${entry.dayId} — ${day.title}</div>
         <div class="ex-note" style="margin-top:2px;">${entry.date}</div></div>
@@ -663,24 +829,15 @@ function renderProgress(){
   }
 }
 
-async function restartChallenge(){
-  if(confirm('Restart the 30-day challenge? Today becomes Day 1 again. Your history and skill progress stay saved.')){
-    challengeMeta = { startDate: todayKey() };
-    await cloudSave('meta', challengeMeta);
-    currentDay = 1;
-    renderTrain();
-    renderProgress();
-  }
-}
-
 async function resetAll(){
-  if(confirm('Clear all logged sessions and skill progress for "'+username+'"? This cannot be undone.')){
-    log = {}; skillState = {}; challengeMeta = { startDate: todayKey() };
+  if(confirm('Clear all logged sessions, skill progress, and your plan for "'+username+'"? This cannot be undone.')){
+    log = {}; skillState = {}; profile = null; challengeMeta = null;
     await cloudSave('log', log);
     await cloudSave('skills', skillState);
-    await cloudSave('meta', challengeMeta);
-    currentDay = 1;
-    renderTrain(); renderSkills(); renderProgress();
+    await sb.from('app_data').delete().eq('username', username).eq('data_key','profile');
+    await sb.from('app_data').delete().eq('username', username).eq('data_key','meta');
+    document.getElementById('appRoot').style.display = 'none';
+    startQuiz();
   }
 }
 
